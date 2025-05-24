@@ -1,7 +1,6 @@
-
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Plus, Edit, Trash2, Search, Filter } from 'lucide-react';
+import { Plus, Edit, Trash2, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
@@ -118,7 +117,7 @@ const ManageProducts = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Manage Products</h1>
-        <Button onClick={() => navigate('/seller/products/add')}>
+        <Button onClick={() => navigate('/seller/products/new')}>
           <Plus className="mr-2 h-4 w-4" />
           Add Product
         </Button>
@@ -148,7 +147,7 @@ const ManageProducts = () => {
           ) : filteredProducts.length === 0 ? (
             <div className="text-center p-8">
               <p className="text-lg text-gray-500 mb-4">No products found</p>
-              <Button onClick={() => navigate('/seller/products/add')}>
+              <Button onClick={() => navigate('/seller/products/new')}>
                 <Plus className="mr-2 h-4 w-4" />
                 Add Your First Product
               </Button>

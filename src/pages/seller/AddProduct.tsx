@@ -16,6 +16,13 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -31,17 +38,30 @@ const productFormSchema = z.object({
     message: "Stock must be a non-negative number",
   }),
   category: z.string().min(1, { message: "Please select a category" }),
-  images: z.array(z.string()).min(1, { message: "At least one image is required" }),
 });
 
 type ProductFormValues = z.infer<typeof productFormSchema>;
+
+// Predefined categories
+const categories = [
+  "Electronics",
+  "Clothing",
+  "Home & Kitchen",
+  "Books",
+  "Toys",
+  "Beauty",
+  "Sports",
+  "Automotive",
+  "Other"
+];
 
 const AddProduct = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productFormSchema),
@@ -51,7 +71,6 @@ const AddProduct = () => {
       price: "",
       stock: "",
       category: "",
-      images: [],
     },
   });
 
@@ -67,25 +86,37 @@ const AddProduct = () => {
 
     try {
       setIsSubmitting(true);
+      setUploadProgress(0);
 
       // Upload images if there are any new ones
-      const finalImageUrls = [...imageUrls];
+      const finalImageUrls: string[] = [];
       
-      if (imageFile) {
-        const fileName = `${user.id}-${Date.now()}-${imageFile.name}`;
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('product-images')
-          .upload(fileName, imageFile);
+      if (imageFiles.length > 0) {
+        // Upload each image and track progress
+        let completed = 0;
+        
+        for (const file of imageFiles) {
+          const fileName = `${user.id}-${Date.now()}-${file.name.replace(/\s+/g, '-')}`;
+          
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('product-images')
+            .upload(fileName, file);
 
-        if (uploadError) {
-          throw new Error(`Error uploading image: ${uploadError.message}`);
+          if (uploadError) {
+            console.error("Upload error:", uploadError);
+            throw new Error(`Error uploading image: ${uploadError.message}`);
+          }
+
+          const { data: urlData } = supabase.storage
+            .from('product-images')
+            .getPublicUrl(fileName);
+
+          finalImageUrls.push(urlData.publicUrl);
+          
+          // Update progress
+          completed++;
+          setUploadProgress(Math.round((completed / imageFiles.length) * 100));
         }
-
-        const { data: urlData } = supabase.storage
-          .from('product-images')
-          .getPublicUrl(fileName);
-
-        finalImageUrls.push(urlData.publicUrl);
       }
 
       if (finalImageUrls.length === 0) {
@@ -99,7 +130,7 @@ const AddProduct = () => {
         .insert([
           {
             seller_id: user.id,
-            seller_name: user.name || user.email,
+            seller_name: user.user_metadata?.name || user.email,
             title: data.title,
             description: data.description,
             price: parseFloat(data.price),
@@ -112,6 +143,7 @@ const AddProduct = () => {
         .single();
 
       if (error) {
+        console.error("Database error:", error);
         throw error;
       }
 
@@ -125,26 +157,39 @@ const AddProduct = () => {
       console.error('Error adding product:', error);
       toast({
         title: "Error",
-        description: "Failed to add product. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to add product. Please try again.",
         variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
+      setUploadProgress(0);
     }
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setImageFile(file);
-      // Create a preview URL
-      const previewUrl = URL.createObjectURL(file);
-      setImageUrls([...imageUrls, previewUrl]);
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      const newFiles: File[] = Array.from(files);
+      setImageFiles([...imageFiles, ...newFiles]);
       
-      // Update the form values
-      const currentImages = form.getValues("images");
-      form.setValue("images", [...currentImages, previewUrl]);
+      // Create preview URLs
+      const newImageUrls = newFiles.map(file => URL.createObjectURL(file));
+      setImageUrls([...imageUrls, ...newImageUrls]);
     }
+  };
+
+  const removeImage = (index: number) => {
+    const newImageUrls = [...imageUrls];
+    const newImageFiles = [...imageFiles];
+    
+    // Release object URL to avoid memory leaks
+    URL.revokeObjectURL(imageUrls[index]);
+    
+    newImageUrls.splice(index, 1);
+    newImageFiles.splice(index, 1);
+    
+    setImageUrls(newImageUrls);
+    setImageFiles(newImageFiles);
   };
 
   return (
@@ -236,49 +281,73 @@ const AddProduct = () => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Category</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g. Electronics, Clothing, etc." {...field} />
-                    </FormControl>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a category" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {categories.map((category) => (
+                          <SelectItem key={category} value={category}>{category}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
               />
               
-              <FormField
-                control={form.control}
-                name="images"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Product Images</FormLabel>
-                    <FormControl>
-                      <div className="space-y-3">
-                        <Input 
-                          type="file" 
-                          accept="image/*" 
-                          onChange={handleImageChange} 
-                          className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100"
-                        />
-                        
-                        {/* Image previews */}
-                        {imageUrls.length > 0 && (
-                          <div className="flex flex-wrap gap-2 mt-3">
-                            {imageUrls.map((url, index) => (
-                              <div key={index} className="relative w-24 h-24">
-                                <img
-                                  src={url}
-                                  alt={`Preview ${index + 1}`}
-                                  className="w-full h-full object-cover rounded border"
-                                />
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+              <div className="space-y-2">
+                <FormLabel>Product Images</FormLabel>
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                  <Input 
+                    type="file" 
+                    accept="image/*" 
+                    multiple
+                    onChange={handleImageChange} 
+                    className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100"
+                  />
+                  <p className="text-sm text-gray-500 mt-2">Upload product images (PNG, JPG, WEBP)</p>
+                </div>
+                
+                {/* Image previews */}
+                {imageUrls.length > 0 && (
+                  <div className="mt-4">
+                    <h4 className="font-medium mb-2">Preview</h4>
+                    <div className="flex flex-wrap gap-3">
+                      {imageUrls.map((url, index) => (
+                        <div key={index} className="relative w-24 h-24 group">
+                          <img
+                            src={url}
+                            alt={`Preview ${index + 1}`}
+                            className="w-full h-full object-cover rounded border"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeImage(index)}
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 )}
-              />
+              </div>
+              
+              {uploadProgress > 0 && uploadProgress < 100 && (
+                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                  <div 
+                    className="bg-blue-600 h-2.5 rounded-full" 
+                    style={{ width: `${uploadProgress}%` }}
+                  ></div>
+                </div>
+              )}
               
               <div className="flex justify-end space-x-3 pt-4">
                 <Button 
