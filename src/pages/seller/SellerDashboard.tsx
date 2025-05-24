@@ -88,18 +88,18 @@ const SellerDashboard = () => {
 
       {/* Quick Actions */}
       <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <Card className="hover:shadow-lg transition-shadow cursor-pointer" asChild>
-          <Link to="/seller/products">
+        <Link to="/seller/products" className="block">
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
             <CardContent className="p-6 text-center">
               <Package className="w-8 h-8 text-blue-600 mx-auto mb-3" />
               <h3 className="font-semibold mb-2">My Products</h3>
               <p className="text-gray-600 text-sm">Manage inventory</p>
             </CardContent>
-          </Link>
-        </Card>
+          </Card>
+        </Link>
 
-        <Card className="hover:shadow-lg transition-shadow cursor-pointer" asChild>
-          <Link to="/seller/orders">
+        <Link to="/seller/orders" className="block">
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
             <CardContent className="p-6 text-center">
               <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
                 <span className="text-green-600 font-semibold">📋</span>
@@ -107,28 +107,28 @@ const SellerDashboard = () => {
               <h3 className="font-semibold mb-2">Orders</h3>
               <p className="text-gray-600 text-sm">Process orders</p>
             </CardContent>
-          </Link>
-        </Card>
+          </Card>
+        </Link>
 
-        <Card className="hover:shadow-lg transition-shadow cursor-pointer" asChild>
-          <Link to="/seller/analytics">
+        <Link to="/seller/analytics" className="block">
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
             <CardContent className="p-6 text-center">
               <TrendingUp className="w-8 h-8 text-purple-600 mx-auto mb-3" />
               <h3 className="font-semibold mb-2">Analytics</h3>
               <p className="text-gray-600 text-sm">View performance</p>
             </CardContent>
-          </Link>
-        </Card>
+          </Card>
+        </Link>
 
-        <Card className="hover:shadow-lg transition-shadow cursor-pointer" asChild>
-          <Link to="/messages">
+        <Link to="/messages" className="block">
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
             <CardContent className="p-6 text-center">
               <MessageCircle className="w-8 h-8 text-orange-600 mx-auto mb-3" />
               <h3 className="font-semibold mb-2">Messages</h3>
               <p className="text-gray-600 text-sm">Chat with buyers</p>
             </CardContent>
-          </Link>
-        </Card>
+          </Card>
+        </Link>
       </div>
 
       {/* Recent Orders */}

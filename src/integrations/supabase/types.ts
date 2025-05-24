@@ -9,7 +9,96 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      orders: {
+        Row: {
+          buyer_id: string
+          created_at: string | null
+          id: string
+          payment_method: string
+          products: Json
+          seller_id: string
+          shipping_address: string
+          status: string
+          total: number
+          updated_at: string | null
+        }
+        Insert: {
+          buyer_id: string
+          created_at?: string | null
+          id?: string
+          payment_method: string
+          products: Json
+          seller_id: string
+          shipping_address: string
+          status?: string
+          total: number
+          updated_at?: string | null
+        }
+        Update: {
+          buyer_id?: string
+          created_at?: string | null
+          id?: string
+          payment_method?: string
+          products?: Json
+          seller_id?: string
+          shipping_address?: string
+          status?: string
+          total?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      products: {
+        Row: {
+          category: string
+          created_at: string | null
+          description: string
+          featured: boolean | null
+          id: string
+          images: string[]
+          original_price: number | null
+          price: number
+          rating: number | null
+          review_count: number | null
+          seller_id: string
+          seller_name: string
+          stock: number
+          title: string
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          description: string
+          featured?: boolean | null
+          id?: string
+          images: string[]
+          original_price?: number | null
+          price: number
+          rating?: number | null
+          review_count?: number | null
+          seller_id: string
+          seller_name: string
+          stock?: number
+          title: string
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          description?: string
+          featured?: boolean | null
+          id?: string
+          images?: string[]
+          original_price?: number | null
+          price?: number
+          rating?: number | null
+          review_count?: number | null
+          seller_id?: string
+          seller_name?: string
+          stock?: number
+          title?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
