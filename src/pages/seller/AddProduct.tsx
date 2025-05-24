@@ -1,153 +1,115 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Form, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormControl, 
-  FormMessage 
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { toast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { 
-  Card, 
-  CardHeader, 
-  CardTitle, 
-  CardDescription, 
-  CardContent, 
-  CardFooter 
-} from '@/components/ui/card';
-import { Upload, X, Loader2 } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
-import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
-// Validation schema for product form
-const productSchema = z.object({
-  title: z.string().min(3, {
-    message: "Product name must be at least 3 characters.",
+// Form schema
+const productFormSchema = z.object({
+  title: z.string().min(3, { message: "Product name must be at least 3 characters" }),
+  description: z.string().min(10, { message: "Description must be at least 10 characters" }),
+  price: z.string().refine((val) => !isNaN(parseFloat(val)) && parseFloat(val) > 0, {
+    message: "Price must be a positive number",
   }),
-  description: z.string().min(10, {
-    message: "Description must be at least 10 characters.",
+  stock: z.string().refine((val) => !isNaN(parseInt(val)) && parseInt(val) >= 0, {
+    message: "Stock must be a non-negative number",
   }),
-  price: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
-    message: "Price must be a positive number.",
-  }),
-  originalPrice: z.string().refine((val) => val === '' || (!isNaN(Number(val)) && Number(val) > 0), {
-    message: "Original price must be a positive number or empty.",
-  }).optional(),
-  category: z.string().min(1, {
-    message: "Please select a category.",
-  }),
-  stock: z.string().refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
-    message: "Stock must be a non-negative number.",
-  }),
+  category: z.string().min(1, { message: "Please select a category" }),
+  images: z.array(z.string()).min(1, { message: "At least one image is required" }),
 });
 
-const categories = [
-  "Electronics",
-  "Clothing",
-  "Home & Kitchen",
-  "Books",
-  "Toys & Games",
-  "Beauty & Personal Care",
-  "Sports & Outdoors",
-  "Automotive",
-  "Health",
-  "Pet Supplies"
-];
+type ProductFormValues = z.infer<typeof productFormSchema>;
 
 const AddProduct = () => {
-  const { user } = useAuth();
   const navigate = useNavigate();
-  const [images, setImages] = useState<File[]>([]);
+  const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
-  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+  const [imageFile, setImageFile] = useState<File | null>(null);
 
-  const form = useForm<z.infer<typeof productSchema>>({
-    resolver: zodResolver(productSchema),
+  const form = useForm<ProductFormValues>({
+    resolver: zodResolver(productFormSchema),
     defaultValues: {
       title: "",
       description: "",
       price: "",
-      originalPrice: "",
+      stock: "",
       category: "",
-      stock: "0",
+      images: [],
     },
   });
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0) return;
-
-    const newFiles = Array.from(e.target.files);
-    const newPreviewUrls = newFiles.map(file => URL.createObjectURL(file));
-
-    setImages(prev => [...prev, ...newFiles]);
-    setPreviewUrls(prev => [...prev, ...newPreviewUrls]);
-  };
-
-  const handleRemoveImage = (index: number) => {
-    const newImages = [...images];
-    const newPreviewUrls = [...previewUrls];
-
-    newImages.splice(index, 1);
-    URL.revokeObjectURL(newPreviewUrls[index]);
-    newPreviewUrls.splice(index, 1);
-
-    setImages(newImages);
-    setPreviewUrls(newPreviewUrls);
-  };
-
-  const handleSubmit = async (values: z.infer<typeof productSchema>) => {
+  const onSubmit = async (data: ProductFormValues) => {
     if (!user) {
       toast({
-        title: "Error",
-        description: "You must be logged in to add products",
+        title: "Authentication error",
+        description: "You must be logged in to add a product",
         variant: "destructive",
       });
       return;
     }
-
-    if (images.length === 0) {
-      toast({
-        title: "Error",
-        description: "Please add at least one product image",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsSubmitting(true);
 
     try {
-      // Upload images
-      const uploadedImageUrls = [];
-      for (const image of images) {
-        const fileName = `${Date.now()}-${image.name}`;
-        // In a real implementation, you'd upload to storage
-        // For now, we'll use placeholder URLs
-        uploadedImageUrls.push(`https://placehold.co/600x400?text=${encodeURIComponent(fileName)}`);
+      setIsSubmitting(true);
+
+      // Upload images if there are any new ones
+      const finalImageUrls = [...imageUrls];
+      
+      if (imageFile) {
+        const fileName = `${user.id}-${Date.now()}-${imageFile.name}`;
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('product-images')
+          .upload(fileName, imageFile);
+
+        if (uploadError) {
+          throw new Error(`Error uploading image: ${uploadError.message}`);
+        }
+
+        const { data: urlData } = supabase.storage
+          .from('product-images')
+          .getPublicUrl(fileName);
+
+        finalImageUrls.push(urlData.publicUrl);
       }
 
-      // Create product in database
-      const { data, error } = await supabase.from('products').insert({
-        seller_id: user.id,
-        seller_name: user.name || 'Unknown Seller',
-        title: values.title,
-        description: values.description,
-        price: parseFloat(values.price),
-        original_price: values.originalPrice ? parseFloat(values.originalPrice) : null,
-        images: uploadedImageUrls,
-        category: values.category,
-        stock: parseInt(values.stock),
-      }).select();
+      if (finalImageUrls.length === 0) {
+        // Add a placeholder image if no images were uploaded
+        finalImageUrls.push('/placeholder.svg');
+      }
+
+      // Add the product to the database
+      const { data: product, error } = await supabase
+        .from('products')
+        .insert([
+          {
+            seller_id: user.id,
+            seller_name: user.name || user.email,
+            title: data.title,
+            description: data.description,
+            price: parseFloat(data.price),
+            stock: parseInt(data.stock),
+            category: data.category,
+            images: finalImageUrls,
+          }
+        ])
+        .select()
+        .single();
 
       if (error) {
         throw error;
@@ -155,7 +117,7 @@ const AddProduct = () => {
 
       toast({
         title: "Success",
-        description: "Product has been added successfully",
+        description: "Product added successfully",
       });
 
       navigate('/seller/products');
@@ -171,58 +133,43 @@ const AddProduct = () => {
     }
   };
 
-  return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <h1 className="text-3xl font-bold mb-8">Add New Product</h1>
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      // Create a preview URL
+      const previewUrl = URL.createObjectURL(file);
+      setImageUrls([...imageUrls, previewUrl]);
+      
+      // Update the form values
+      const currentImages = form.getValues("images");
+      form.setValue("images", [...currentImages, previewUrl]);
+    }
+  };
 
+  return (
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <Card>
         <CardHeader>
-          <CardTitle>Product Details</CardTitle>
-          <CardDescription>Enter the information about your product</CardDescription>
+          <CardTitle className="text-2xl">Add New Product</CardTitle>
         </CardHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)}>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField
-                  control={form.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Product Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter product name" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="category"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Category</FormLabel>
-                      <FormControl>
-                        <select
-                          className="w-full p-2 border rounded-md"
-                          {...field}
-                        >
-                          <option value="">Select a category</option>
-                          {categories.map((category) => (
-                            <option key={category} value={category}>
-                              {category}
-                            </option>
-                          ))}
-                        </select>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Product Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter product name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
               <FormField
                 control={form.control}
                 name="description"
@@ -231,8 +178,8 @@ const AddProduct = () => {
                     <FormLabel>Description</FormLabel>
                     <FormControl>
                       <Textarea 
-                        placeholder="Describe your product in detail" 
-                        className="min-h-[120px]"
+                        placeholder="Describe your product" 
+                        className="min-h-[120px]" 
                         {...field} 
                       />
                     </FormControl>
@@ -240,52 +187,28 @@ const AddProduct = () => {
                   </FormItem>
                 )}
               />
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="price"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Price</FormLabel>
+                      <FormLabel>Price ($)</FormLabel>
                       <FormControl>
-                        <div className="relative">
-                          <span className="absolute left-3 top-2">$</span>
-                          <Input 
-                            type="text" 
-                            className="pl-6" 
-                            placeholder="0.00" 
-                            {...field} 
-                          />
-                        </div>
+                        <Input 
+                          type="number" 
+                          min="0.01" 
+                          step="0.01" 
+                          placeholder="0.00" 
+                          {...field} 
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-
-                <FormField
-                  control={form.control}
-                  name="originalPrice"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Original Price (Optional)</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <span className="absolute left-3 top-2">$</span>
-                          <Input 
-                            type="text" 
-                            className="pl-6" 
-                            placeholder="0.00" 
-                            {...field} 
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
+                
                 <FormField
                   control={form.control}
                   name="stock"
@@ -293,86 +216,85 @@ const AddProduct = () => {
                     <FormItem>
                       <FormLabel>Stock Quantity</FormLabel>
                       <FormControl>
-                        <Input type="number" min="0" placeholder="0" {...field} />
+                        <Input 
+                          type="number" 
+                          min="0" 
+                          step="1" 
+                          placeholder="0" 
+                          {...field} 
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
-
-              <div>
-                <FormLabel className="block mb-2">Product Images</FormLabel>
-                <div className="border-2 border-dashed rounded-lg p-6 text-center">
-                  <Input 
-                    type="file" 
-                    id="productImage" 
-                    accept="image/*" 
-                    multiple 
-                    onChange={handleImageChange}
-                    className="hidden" 
-                  />
-                  <label htmlFor="productImage" className="cursor-pointer">
-                    <div className="flex flex-col items-center justify-center space-y-2">
-                      <Upload className="h-8 w-8 text-gray-400" />
-                      <p className="text-sm">Drag and drop or click to upload images</p>
-                      <span className="text-xs text-gray-500">
-                        (Recommended: 600 x 600px, Max 5MB)
-                      </span>
-                      <Button type="button" variant="outline" size="sm">
-                        Select Files
-                      </Button>
-                    </div>
-                  </label>
-                </div>
-
-                {/* Preview Images */}
-                {previewUrls.length > 0 && (
-                  <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                    {previewUrls.map((url, index) => (
-                      <div 
-                        key={index} 
-                        className="relative group h-24 w-full rounded-md overflow-hidden border"
-                      >
-                        <img 
-                          src={url} 
-                          alt={`Product preview ${index + 1}`}
-                          className="h-full w-full object-cover"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveImage(index)}
-                          className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1
-                            opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
+              
+              <FormField
+                control={form.control}
+                name="category"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Category</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g. Electronics, Clothing, etc." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
                 )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="images"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Product Images</FormLabel>
+                    <FormControl>
+                      <div className="space-y-3">
+                        <Input 
+                          type="file" 
+                          accept="image/*" 
+                          onChange={handleImageChange} 
+                          className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100"
+                        />
+                        
+                        {/* Image previews */}
+                        {imageUrls.length > 0 && (
+                          <div className="flex flex-wrap gap-2 mt-3">
+                            {imageUrls.map((url, index) => (
+                              <div key={index} className="relative w-24 h-24">
+                                <img
+                                  src={url}
+                                  alt={`Preview ${index + 1}`}
+                                  className="w-full h-full object-cover rounded border"
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <div className="flex justify-end space-x-3 pt-4">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => navigate('/seller/products')}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? "Adding..." : "Add Product"}
+                </Button>
               </div>
-            </CardContent>
-
-            <CardFooter className="flex justify-between">
-              <Button 
-                type="button" 
-                variant="outline"
-                onClick={() => navigate('/seller/products')}
-              >
-                Cancel
-              </Button>
-              <Button 
-                type="submit" 
-                disabled={isSubmitting}
-                className="space-x-2"
-              >
-                {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                <span>Add Product</span>
-              </Button>
-            </CardFooter>
-          </form>
-        </Form>
+            </form>
+          </Form>
+        </CardContent>
       </Card>
     </div>
   );

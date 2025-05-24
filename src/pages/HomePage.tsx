@@ -138,8 +138,9 @@ const HomePage = () => {
                 <p className="text-gray-600 text-sm">Explore our marketplace</p>
               </CardContent>
             </Card>
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer" asChild>
-              <Link to="/buyer/orders">
+            
+            <Link to="/buyer/orders" className="block">
+              <Card className="hover:shadow-lg transition-shadow cursor-pointer">
                 <CardContent className="p-6 text-center">
                   <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
                     <span className="text-green-600 font-semibold">📦</span>
@@ -147,10 +148,11 @@ const HomePage = () => {
                   <h3 className="font-semibold mb-2">My Orders</h3>
                   <p className="text-gray-600 text-sm">Track your purchases</p>
                 </CardContent>
-              </Link>
-            </Card>
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer" asChild>
-              <Link to="/cart">
+              </Card>
+            </Link>
+            
+            <Link to="/cart" className="block">
+              <Card className="hover:shadow-lg transition-shadow cursor-pointer">
                 <CardContent className="p-6 text-center">
                   <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3">
                     <span className="text-orange-600 font-semibold">🛒</span>
@@ -158,15 +160,15 @@ const HomePage = () => {
                   <h3 className="font-semibold mb-2">My Cart</h3>
                   <p className="text-gray-600 text-sm">Review items to buy</p>
                 </CardContent>
-              </Link>
-            </Card>
+              </Card>
+            </Link>
           </>
         )}
         
         {user.role === 'seller' && (
           <>
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer" asChild>
-              <Link to="/seller/products">
+            <Link to="/seller/products" className="block">
+              <Card className="hover:shadow-lg transition-shadow cursor-pointer">
                 <CardContent className="p-6 text-center">
                   <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
                     <span className="text-blue-600 font-semibold">📦</span>
@@ -174,10 +176,11 @@ const HomePage = () => {
                   <h3 className="font-semibold mb-2">My Products</h3>
                   <p className="text-gray-600 text-sm">Manage your inventory</p>
                 </CardContent>
-              </Link>
-            </Card>
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer" asChild>
-              <Link to="/seller/orders">
+              </Card>
+            </Link>
+            
+            <Link to="/seller/orders" className="block">
+              <Card className="hover:shadow-lg transition-shadow cursor-pointer">
                 <CardContent className="p-6 text-center">
                   <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
                     <span className="text-green-600 font-semibold">📋</span>
@@ -185,10 +188,11 @@ const HomePage = () => {
                   <h3 className="font-semibold mb-2">Orders</h3>
                   <p className="text-gray-600 text-sm">Process customer orders</p>
                 </CardContent>
-              </Link>
-            </Card>
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer" asChild>
-              <Link to="/seller/analytics">
+              </Card>
+            </Link>
+            
+            <Link to="/seller/analytics" className="block">
+              <Card className="hover:shadow-lg transition-shadow cursor-pointer">
                 <CardContent className="p-6 text-center">
                   <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
                     <span className="text-purple-600 font-semibold">📊</span>
@@ -196,15 +200,15 @@ const HomePage = () => {
                   <h3 className="font-semibold mb-2">Analytics</h3>
                   <p className="text-gray-600 text-sm">View sales performance</p>
                 </CardContent>
-              </Link>
-            </Card>
+              </Card>
+            </Link>
           </>
         )}
         
         {user.role === 'admin' && (
           <>
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer" asChild>
-              <Link to="/admin/users">
+            <Link to="/admin/users" className="block">
+              <Card className="hover:shadow-lg transition-shadow cursor-pointer">
                 <CardContent className="p-6 text-center">
                   <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
                     <span className="text-blue-600 font-semibold">👥</span>
@@ -212,10 +216,11 @@ const HomePage = () => {
                   <h3 className="font-semibold mb-2">Users</h3>
                   <p className="text-gray-600 text-sm">Manage platform users</p>
                 </CardContent>
-              </Link>
-            </Card>
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer" asChild>
-              <Link to="/admin/products">
+              </Card>
+            </Link>
+            
+            <Link to="/admin/products" className="block">
+              <Card className="hover:shadow-lg transition-shadow cursor-pointer">
                 <CardContent className="p-6 text-center">
                   <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
                     <span className="text-green-600 font-semibold">🛍️</span>
@@ -223,10 +228,11 @@ const HomePage = () => {
                   <h3 className="font-semibold mb-2">Products</h3>
                   <p className="text-gray-600 text-sm">Moderate listings</p>
                 </CardContent>
-              </Link>
-            </Card>
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer" asChild>
-              <Link to="/admin/analytics">
+              </Card>
+            </Link>
+            
+            <Link to="/admin/analytics" className="block">
+              <Card className="hover:shadow-lg transition-shadow cursor-pointer">
                 <CardContent className="p-6 text-center">
                   <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
                     <span className="text-purple-600 font-semibold">📈</span>
@@ -234,8 +240,8 @@ const HomePage = () => {
                   <h3 className="font-semibold mb-2">Analytics</h3>
                   <p className="text-gray-600 text-sm">Platform insights</p>
                 </CardContent>
-              </Link>
-            </Card>
+              </Card>
+            </Link>
           </>
         )}
       </div>

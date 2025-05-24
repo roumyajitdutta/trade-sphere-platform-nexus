@@ -73,45 +73,45 @@ const AdminDashboard = () => {
 
       {/* Quick Actions */}
       <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <Card className="hover:shadow-lg transition-shadow cursor-pointer" asChild>
-          <Link to="/admin/users">
+        <Link to="/admin/users" className="block">
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
             <CardContent className="p-6 text-center">
               <Users className="w-8 h-8 text-blue-600 mx-auto mb-3" />
               <h3 className="font-semibold mb-2">Manage Users</h3>
               <p className="text-gray-600 text-sm">View and moderate users</p>
             </CardContent>
-          </Link>
-        </Card>
+          </Card>
+        </Link>
 
-        <Card className="hover:shadow-lg transition-shadow cursor-pointer" asChild>
-          <Link to="/admin/products">
+        <Link to="/admin/products" className="block">
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
             <CardContent className="p-6 text-center">
               <Package className="w-8 h-8 text-green-600 mx-auto mb-3" />
               <h3 className="font-semibold mb-2">Manage Products</h3>
               <p className="text-gray-600 text-sm">Moderate listings</p>
             </CardContent>
-          </Link>
-        </Card>
+          </Card>
+        </Link>
 
-        <Card className="hover:shadow-lg transition-shadow cursor-pointer" asChild>
-          <Link to="/admin/analytics">
+        <Link to="/admin/analytics" className="block">
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
             <CardContent className="p-6 text-center">
               <TrendingUp className="w-8 h-8 text-purple-600 mx-auto mb-3" />
               <h3 className="font-semibold mb-2">Analytics</h3>
               <p className="text-gray-600 text-sm">Platform insights</p>
             </CardContent>
-          </Link>
-        </Card>
+          </Card>
+        </Link>
 
-        <Card className="hover:shadow-lg transition-shadow cursor-pointer" asChild>
-          <Link to="/admin/disputes">
+        <Link to="/admin/disputes" className="block">
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
             <CardContent className="p-6 text-center">
               <AlertTriangle className="w-8 h-8 text-red-600 mx-auto mb-3" />
               <h3 className="font-semibold mb-2">Disputes</h3>
               <p className="text-gray-600 text-sm">Handle conflicts</p>
             </CardContent>
-          </Link>
-        </Card>
+          </Card>
+        </Link>
       </div>
 
       {/* Recent Activity */}
