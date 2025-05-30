@@ -22,10 +22,28 @@ const RegisterPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!name || !email || !password || !confirmPassword) {
+      toast({
+        title: "Missing fields",
+        description: "Please fill in all fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     if (password !== confirmPassword) {
       toast({
         title: "Password mismatch",
         description: "Passwords do not match. Please try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (password.length < 6) {
+      toast({
+        title: "Password too short",
+        description: "Password must be at least 6 characters long.",
         variant: "destructive",
       });
       return;
@@ -35,13 +53,14 @@ const RegisterPage = () => {
       await register(email, password, name, role);
       toast({
         title: "Account created!",
-        description: "Welcome to our marketplace.",
+        description: "Please check your email to verify your account.",
       });
-      navigate('/');
-    } catch (error) {
+      navigate('/login');
+    } catch (error: any) {
+      console.error('Registration error:', error);
       toast({
         title: "Registration failed",
-        description: "Please try again with different credentials.",
+        description: error.message || "Please try again with different credentials.",
         variant: "destructive",
       });
     }
@@ -88,7 +107,7 @@ const RegisterPage = () => {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Create a password"
+                placeholder="Create a password (min 6 characters)"
                 required
               />
             </div>

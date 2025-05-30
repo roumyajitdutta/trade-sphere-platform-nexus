@@ -12,6 +12,14 @@ const Header = () => {
   const { user, logout } = useAuth();
   const { itemCount } = useCart();
 
+  const getUserRole = () => {
+    return user?.user_metadata?.role || 'buyer';
+  };
+
+  const getUserName = () => {
+    return user?.user_metadata?.name || user?.email?.split('@')[0] || 'User';
+  };
+
   return (
     <header className="bg-white shadow-sm border-b sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -42,7 +50,7 @@ const Header = () => {
           <div className="flex items-center space-x-4">
             {user ? (
               <>
-                {user.role === 'buyer' && (
+                {getUserRole() === 'buyer' && (
                   <>
                     <Button variant="ghost" size="sm" asChild>
                       <Link to="/messages">
@@ -68,9 +76,9 @@ const Header = () => {
                 
                 <div className="flex items-center space-x-2">
                   <Button variant="ghost" size="sm" asChild>
-                    <Link to={`/${user.role}/dashboard`}>
+                    <Link to={`/${getUserRole()}/dashboard`}>
                       <User className="w-4 h-4 mr-2" />
-                      {user.name}
+                      {getUserName()}
                     </Link>
                   </Button>
                   <Button variant="outline" size="sm" onClick={logout}>

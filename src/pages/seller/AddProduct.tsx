@@ -124,13 +124,16 @@ const AddProduct = () => {
         finalImageUrls.push('/placeholder.svg');
       }
 
+      // Get seller name from user metadata or email
+      const sellerName = user.user_metadata?.name || user.email || 'Unknown Seller';
+
       // Add the product to the database
       const { data: product, error } = await supabase
         .from('products')
         .insert([
           {
             seller_id: user.id,
-            seller_name: user.name || user.email || 'Unknown Seller',
+            seller_name: sellerName,
             title: data.title,
             description: data.description,
             price: parseFloat(data.price),

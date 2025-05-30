@@ -5,14 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<'buyer' | 'seller' | 'admin'>('buyer');
   const { login, loading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -20,17 +18,27 @@ const LoginPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!email || !password) {
+      toast({
+        title: "Missing fields",
+        description: "Please fill in all fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     try {
-      await login(email, password, role);
+      await login(email, password);
       toast({
         title: "Welcome back!",
         description: "You have successfully logged in.",
       });
       navigate('/');
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Login error:', error);
       toast({
         title: "Login failed",
-        description: "Please check your credentials and try again.",
+        description: error.message || "Please check your credentials and try again.",
         variant: "destructive",
       });
     }
@@ -68,20 +76,6 @@ const LoginPage = () => {
                 placeholder="Enter your password"
                 required
               />
-            </div>
-            
-            <div>
-              <Label htmlFor="role">Login as</Label>
-              <Select value={role} onValueChange={(value: 'buyer' | 'seller' | 'admin') => setRole(value)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="buyer">Buyer</SelectItem>
-                  <SelectItem value="seller">Seller</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
             
             <Button type="submit" className="w-full" disabled={loading}>

@@ -1,12 +1,14 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User } from '@/types';
+import { User, Session } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string, role: 'buyer' | 'seller' | 'admin') => Promise<void>;
+  session: Session | null;
+  login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, name: string, role: 'buyer' | 'seller') => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   loading: boolean;
 }
 
@@ -22,60 +24,90 @@ export const useAuth = () => {
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check for stored user
-    const storedUser = localStorage.getItem('ecommerce_user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setLoading(false);
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        console.log('Auth state changed:', event, session);
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
+      }
+    );
+
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session:', session);
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const login = async (email: string, password: string, role: 'buyer' | 'seller' | 'admin') => {
+  const login = async (email: string, password: string) => {
     setLoading(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
     
-    const newUser: User = {
-      id: Math.random().toString(36),
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
-      name: email.split('@')[0],
-      role,
-      createdAt: new Date().toISOString(),
-    };
-    
-    setUser(newUser);
-    localStorage.setItem('ecommerce_user', JSON.stringify(newUser));
+      password,
+    });
+
+    if (error) {
+      setLoading(false);
+      throw error;
+    }
+
+    console.log('Login successful:', data);
     setLoading(false);
   };
 
   const register = async (email: string, password: string, name: string, role: 'buyer' | 'seller') => {
     setLoading(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
     
-    const newUser: User = {
-      id: Math.random().toString(36),
+    const redirectUrl = `${window.location.origin}/`;
+    
+    const { data, error } = await supabase.auth.signUp({
       email,
-      name,
-      role,
-      createdAt: new Date().toISOString(),
-    };
-    
-    setUser(newUser);
-    localStorage.setItem('ecommerce_user', JSON.stringify(newUser));
+      password,
+      options: {
+        emailRedirectTo: redirectUrl,
+        data: {
+          name: name,
+          role: role,
+        }
+      }
+    });
+
+    if (error) {
+      setLoading(false);
+      throw error;
+    }
+
+    console.log('Registration successful:', data);
     setLoading(false);
   };
 
-  const logout = () => {
+  const logout = async () => {
+    setLoading(true);
+    
+    const { error } = await supabase.auth.signOut();
+    
+    if (error) {
+      console.error('Logout error:', error);
+    }
+    
     setUser(null);
-    localStorage.removeItem('ecommerce_user');
+    setSession(null);
+    setLoading(false);
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+    <AuthContext.Provider value={{ user, session, login, register, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );
