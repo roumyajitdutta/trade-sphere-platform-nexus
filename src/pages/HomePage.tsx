@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, ShoppingCart, Store, Shield } from 'lucide-react';
@@ -12,6 +11,16 @@ const HomePage = () => {
   const { user } = useAuth();
 
   const featuredProducts = mockProducts.filter(p => p.featured);
+
+  const getUserName = () => {
+    if (!user) return '';
+    return user.user_metadata?.name || user.email?.split('@')[0] || 'User';
+  };
+
+  const getUserRole = () => {
+    if (!user) return 'buyer';
+    return user.user_metadata?.role || 'buyer';
+  };
 
   if (!user) {
     return (
@@ -115,12 +124,12 @@ const HomePage = () => {
       {/* Welcome Banner */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg p-8 mb-8">
         <h1 className="text-3xl font-bold mb-2">
-          Welcome back, {user.name}!
+          Welcome back, {getUserName()}!
         </h1>
         <p className="text-blue-100">
-          {user.role === 'buyer' 
+          {getUserRole() === 'buyer' 
             ? 'Discover amazing products from trusted sellers'
-            : user.role === 'seller'
+            : getUserRole() === 'seller'
             ? 'Manage your store and grow your business'
             : 'Monitor platform activity and moderate content'
           }
@@ -129,7 +138,7 @@ const HomePage = () => {
 
       {/* Quick Actions */}
       <div className="grid md:grid-cols-3 gap-6 mb-12">
-        {user.role === 'buyer' && (
+        {getUserRole() === 'buyer' && (
           <>
             <Card className="hover:shadow-lg transition-shadow cursor-pointer">
               <CardContent className="p-6 text-center">
@@ -165,7 +174,7 @@ const HomePage = () => {
           </>
         )}
         
-        {user.role === 'seller' && (
+        {getUserRole() === 'seller' && (
           <>
             <Link to="/seller/products" className="block">
               <Card className="hover:shadow-lg transition-shadow cursor-pointer">
@@ -205,7 +214,7 @@ const HomePage = () => {
           </>
         )}
         
-        {user.role === 'admin' && (
+        {getUserRole() === 'admin' && (
           <>
             <Link to="/admin/users" className="block">
               <Card className="hover:shadow-lg transition-shadow cursor-pointer">
