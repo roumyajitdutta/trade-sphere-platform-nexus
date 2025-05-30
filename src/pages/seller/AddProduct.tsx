@@ -130,7 +130,7 @@ const AddProduct = () => {
         .insert([
           {
             seller_id: user.id,
-            seller_name: user.user_metadata?.name || user.email,
+            seller_name: user.name || user.email || 'Unknown Seller',
             title: data.title,
             description: data.description,
             price: parseFloat(data.price),
