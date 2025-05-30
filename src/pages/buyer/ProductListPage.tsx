@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Search, Filter, SlidersHorizontal } from 'lucide-react';
@@ -69,13 +68,19 @@ const ProductListPage = () => {
     const fetchProducts = async () => {
       try {
         setIsLoading(true);
+        console.log('Fetching products from Supabase...');
+        
         const { data, error } = await supabase
           .from('products')
-          .select('*');
+          .select('*')
+          .order('created_at', { ascending: false });
 
         if (error) {
+          console.error('Supabase error:', error);
           throw error;
         }
+
+        console.log('Raw products data from Supabase:', data);
 
         // Transform the data to match our Product type
         const transformedProducts = data.map(product => ({
@@ -84,17 +89,18 @@ const ProductListPage = () => {
           sellerName: product.seller_name,
           title: product.title,
           description: product.description,
-          price: product.price,
-          originalPrice: product.original_price || undefined,
-          images: product.images,
+          price: Number(product.price),
+          originalPrice: product.original_price ? Number(product.original_price) : undefined,
+          images: Array.isArray(product.images) ? product.images : [product.images].filter(Boolean),
           category: product.category,
           stock: product.stock,
-          rating: product.rating,
-          reviewCount: product.review_count,
+          rating: Number(product.rating || 0),
+          reviewCount: product.review_count || 0,
           featured: product.featured || false,
           createdAt: product.created_at
         }));
 
+        console.log('Transformed products:', transformedProducts);
         setProducts(transformedProducts);
       } catch (error) {
         console.error('Error fetching products:', error);
@@ -113,6 +119,7 @@ const ProductListPage = () => {
 
   // Apply filters and sorting
   useEffect(() => {
+    console.log('Applying filters to products:', products.length);
     let result = [...products];
     
     // Apply search filter
@@ -121,21 +128,25 @@ const ProductListPage = () => {
         product.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         product.description.toLowerCase().includes(searchTerm.toLowerCase())
       );
+      console.log('After search filter:', result.length);
     }
     
     // Apply category filter
     if (selectedCategory) {
       result = result.filter(product => product.category === selectedCategory);
+      console.log('After category filter:', result.length);
     }
     
     // Apply price range filter
     result = result.filter(
       product => product.price >= priceRange[0] && product.price <= priceRange[1]
     );
+    console.log('After price filter:', result.length);
     
     // Apply stock filter
     if (onlyInStock) {
       result = result.filter(product => product.stock > 0);
+      console.log('After stock filter:', result.length);
     }
     
     // Apply sorting
@@ -156,6 +167,7 @@ const ProductListPage = () => {
         break;
     }
     
+    console.log('Final filtered products:', result.length);
     setFilteredProducts(result);
     
     // Update URL params

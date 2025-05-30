@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, ShoppingCart, Store, Shield } from 'lucide-react';
@@ -5,12 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import ProductGrid from '@/components/products/ProductGrid';
-import { mockProducts } from '@/data/mockData';
+import { supabase } from '@/integrations/supabase/client';
+import { Product } from '@/types';
 
 const HomePage = () => {
   const { user } = useAuth();
-
-  const featuredProducts = mockProducts.filter(p => p.featured);
+  const [featuredProducts, setFeaturedProducts] = React.useState<Product[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
 
   const getUserName = () => {
     if (!user) return '';
@@ -21,6 +23,52 @@ const HomePage = () => {
     if (!user) return 'buyer';
     return user.user_metadata?.role || 'buyer';
   };
+
+  // Fetch featured products from Supabase instead of using mock data
+  React.useEffect(() => {
+    const fetchFeaturedProducts = async () => {
+      try {
+        console.log('Fetching featured products...');
+        const { data, error } = await supabase
+          .from('products')
+          .select('*')
+          .eq('featured', true)
+          .limit(8);
+
+        if (error) {
+          console.error('Error fetching featured products:', error);
+          return;
+        }
+
+        console.log('Featured products from database:', data);
+
+        const transformedProducts = data.map(product => ({
+          id: product.id,
+          sellerId: product.seller_id,
+          sellerName: product.seller_name,
+          title: product.title,
+          description: product.description,
+          price: Number(product.price),
+          originalPrice: product.original_price ? Number(product.original_price) : undefined,
+          images: Array.isArray(product.images) ? product.images : [product.images].filter(Boolean),
+          category: product.category,
+          stock: product.stock,
+          rating: Number(product.rating || 0),
+          reviewCount: product.review_count || 0,
+          featured: product.featured || false,
+          createdAt: product.created_at
+        }));
+
+        setFeaturedProducts(transformedProducts);
+      } catch (error) {
+        console.error('Error loading featured products:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchFeaturedProducts();
+  }, []);
 
   if (!user) {
     return (
@@ -140,13 +188,15 @@ const HomePage = () => {
       <div className="grid md:grid-cols-3 gap-6 mb-12">
         {getUserRole() === 'buyer' && (
           <>
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-              <CardContent className="p-6 text-center">
-                <ShoppingCart className="w-8 h-8 text-blue-600 mx-auto mb-3" />
-                <h3 className="font-semibold mb-2">Browse Products</h3>
-                <p className="text-gray-600 text-sm">Explore our marketplace</p>
-              </CardContent>
-            </Card>
+            <Link to="/products" className="block">
+              <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+                <CardContent className="p-6 text-center">
+                  <ShoppingCart className="w-8 h-8 text-blue-600 mx-auto mb-3" />
+                  <h3 className="font-semibold mb-2">Browse Products</h3>
+                  <p className="text-gray-600 text-sm">Explore our marketplace</p>
+                </CardContent>
+              </Card>
+            </Link>
             
             <Link to="/buyer/orders" className="block">
               <Card className="hover:shadow-lg transition-shadow cursor-pointer">
@@ -256,7 +306,7 @@ const HomePage = () => {
       </div>
 
       {/* Featured Products */}
-      {featuredProducts.length > 0 && (
+      {!isLoading && featuredProducts.length > 0 && (
         <ProductGrid products={featuredProducts} title="Featured Products" />
       )}
     </div>

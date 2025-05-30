@@ -17,6 +17,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const { addToCart } = useCart();
   const { user } = useAuth();
 
+  console.log('Rendering ProductCard for:', product.title, product);
+
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -27,14 +29,28 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
     : 0;
 
+  const getUserRole = () => {
+    if (!user) return 'buyer';
+    return user.user_metadata?.role || 'buyer';
+  };
+
+  // Ensure we have at least one image
+  const productImage = Array.isArray(product.images) && product.images.length > 0 
+    ? product.images[0] 
+    : '/placeholder.svg';
+
   return (
     <Card className="group hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
       <Link to={`/products/${product.id}`}>
         <div className="relative overflow-hidden rounded-t-lg">
           <img
-            src={product.images[0]}
+            src={productImage}
             alt={product.title}
             className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+            onError={(e) => {
+              console.log('Image failed to load:', productImage);
+              e.currentTarget.src = '/placeholder.svg';
+            }}
           />
           {product.featured && (
             <Badge className="absolute top-2 left-2 bg-orange-500 hover:bg-orange-600">
@@ -75,7 +91,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               )}
             </div>
             
-            {user?.role === 'buyer' && (
+            {getUserRole() === 'buyer' && (
               <Button
                 size="sm"
                 onClick={handleAddToCart}
