@@ -1,12 +1,13 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Search, ShoppingCart, User, MessageCircle, Bell } from 'lucide-react';
+import { Search, ShoppingCart, User, MessageCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
 
 const Header = () => {
   const { user, logout } = useAuth();
@@ -70,9 +71,7 @@ const Header = () => {
                   </>
                 )}
                 
-                <Button variant="ghost" size="sm">
-                  <Bell className="w-4 h-4" />
-                </Button>
+                <NotificationBell />
                 
                 <div className="flex items-center space-x-2">
                   <Button variant="ghost" size="sm" asChild>
