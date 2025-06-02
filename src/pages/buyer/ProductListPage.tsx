@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Search, Filter, SlidersHorizontal } from 'lucide-react';
@@ -59,7 +60,7 @@ const ProductListPage = () => {
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
-  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || '');
+  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
   const [onlyInStock, setOnlyInStock] = useState(false);
   const [sortBy, setSortBy] = useState(searchParams.get('sort') || 'newest');
@@ -132,7 +133,7 @@ const ProductListPage = () => {
     }
     
     // Apply category filter
-    if (selectedCategory) {
+    if (selectedCategory && selectedCategory !== 'all') {
       result = result.filter(product => product.category === selectedCategory);
       console.log('After category filter:', result.length);
     }
@@ -173,7 +174,7 @@ const ProductListPage = () => {
     // Update URL params
     const params = new URLSearchParams();
     if (searchTerm) params.set('search', searchTerm);
-    if (selectedCategory) params.set('category', selectedCategory);
+    if (selectedCategory && selectedCategory !== 'all') params.set('category', selectedCategory);
     if (sortBy) params.set('sort', sortBy);
     setSearchParams(params);
     
@@ -186,7 +187,7 @@ const ProductListPage = () => {
 
   const handleReset = () => {
     setSearchTerm('');
-    setSelectedCategory('');
+    setSelectedCategory('all');
     setPriceRange([0, 1000]);
     setOnlyInStock(false);
     setSortBy('newest');
@@ -229,7 +230,7 @@ const ProductListPage = () => {
                     <SelectValue placeholder="All Categories" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Categories</SelectItem>
+                    <SelectItem value="all">All Categories</SelectItem>
                     {categories.map(category => (
                       <SelectItem key={category} value={category}>
                         {category}
@@ -310,7 +311,7 @@ const ProductListPage = () => {
                         <SelectValue placeholder="All Categories" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">All Categories</SelectItem>
+                        <SelectItem value="all">All Categories</SelectItem>
                         {categories.map(category => (
                           <SelectItem key={category} value={category}>
                             {category}
