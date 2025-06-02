@@ -26,9 +26,10 @@ export const useNotifications = () => {
           return;
         }
 
-        const typedData = data as Notification[];
-        setNotifications(typedData || []);
-        setUnreadCount(typedData?.filter(n => !n.read).length || 0);
+        // Properly convert the data to Notification[] type
+        const typedData: Notification[] = (data as unknown as Notification[]) || [];
+        setNotifications(typedData);
+        setUnreadCount(typedData.filter(n => !n.read).length);
       } catch (err) {
         console.error('Failed to fetch notifications:', err);
       }
@@ -49,7 +50,7 @@ export const useNotifications = () => {
         },
         (payload) => {
           console.log('New notification:', payload);
-          const newNotification = payload.new as Notification;
+          const newNotification = payload.new as unknown as Notification;
           setNotifications(prev => [newNotification, ...prev]);
           setUnreadCount(prev => prev + 1);
         }
