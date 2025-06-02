@@ -87,63 +87,86 @@ const SellerOrders = () => {
     if (!user) return;
 
     setLoading(true);
-    const { data, error } = await supabase
-      .from('orders')
-      .select('*')
-      .eq('seller_id', user.id)
-      .order('created_at', { ascending: false });
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('seller_id', user.id)
+        .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error('Error fetching orders:', error);
+      if (error) {
+        console.error('Error fetching orders:', error);
+        toast({
+          title: "Error",
+          description: "Failed to fetch orders",
+          variant: "destructive"
+        });
+      } else {
+        setOrders(data || []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch orders:', err);
       toast({
         title: "Error",
         description: "Failed to fetch orders",
         variant: "destructive"
       });
-    } else {
-      setOrders(data || []);
     }
     setLoading(false);
   };
 
   const updateOrderStatus = async (orderId: string, status: 'accepted' | 'rejected') => {
-    const { error } = await supabase
-      .from('orders')
-      .update({ 
-        status,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', orderId)
-      .eq('seller_id', user?.id);
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ 
+          status,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', orderId)
+        .eq('seller_id', user?.id);
 
-    if (error) {
-      console.error('Error updating order:', error);
+      if (error) {
+        console.error('Error updating order:', error);
+        toast({
+          title: "Error",
+          description: "Failed to update order status",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Create notification for buyer
+      const order = orders.find(o => o.id === orderId);
+      if (order) {
+        try {
+          await supabase
+            .from('notifications' as any)
+            .insert({
+              user_id: order.buyer_id,
+              type: status === 'accepted' ? 'order_accepted' : 'order_rejected',
+              title: `Order ${status.charAt(0).toUpperCase() + status.slice(1)}`,
+              message: `Your order for $${order.total} has been ${status}`,
+              order_id: orderId
+            });
+        } catch (notificationError) {
+          console.error('Error creating notification:', notificationError);
+          // Don't fail the whole operation if notification fails
+        }
+      }
+
+      toast({
+        title: "Success",
+        description: `Order ${status} successfully`,
+      });
+    } catch (err) {
+      console.error('Failed to update order:', err);
       toast({
         title: "Error",
         description: "Failed to update order status",
         variant: "destructive"
       });
-      return;
     }
-
-    // Create notification for buyer
-    const order = orders.find(o => o.id === orderId);
-    if (order) {
-      await supabase
-        .from('notifications')
-        .insert({
-          user_id: order.buyer_id,
-          type: status === 'accepted' ? 'order_accepted' : 'order_rejected',
-          title: `Order ${status.charAt(0).toUpperCase() + status.slice(1)}`,
-          message: `Your order for $${order.total} has been ${status}`,
-          order_id: orderId
-        });
-    }
-
-    toast({
-      title: "Success",
-      description: `Order ${status} successfully`,
-    });
   };
 
   const getStatusColor = (status: string) => {

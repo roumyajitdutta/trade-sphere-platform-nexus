@@ -14,19 +14,24 @@ export const useNotifications = () => {
 
     // Fetch existing notifications
     const fetchNotifications = async () => {
-      const { data, error } = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+      try {
+        const { data, error } = await supabase
+          .from('notifications' as any)
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching notifications:', error);
-        return;
+        if (error) {
+          console.error('Error fetching notifications:', error);
+          return;
+        }
+
+        const typedData = data as Notification[];
+        setNotifications(typedData || []);
+        setUnreadCount(typedData?.filter(n => !n.read).length || 0);
+      } catch (err) {
+        console.error('Failed to fetch notifications:', err);
       }
-
-      setNotifications(data || []);
-      setUnreadCount(data?.filter(n => !n.read).length || 0);
     };
 
     fetchNotifications();
@@ -59,21 +64,25 @@ export const useNotifications = () => {
   const markAsRead = async (notificationId: string) => {
     if (!user) return;
 
-    const { error } = await supabase
-      .from('notifications')
-      .update({ read: true })
-      .eq('id', notificationId)
-      .eq('user_id', user.id);
+    try {
+      const { error } = await supabase
+        .from('notifications' as any)
+        .update({ read: true })
+        .eq('id', notificationId)
+        .eq('user_id', user.id);
 
-    if (error) {
-      console.error('Error marking notification as read:', error);
-      return;
+      if (error) {
+        console.error('Error marking notification as read:', error);
+        return;
+      }
+
+      setNotifications(prev =>
+        prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
+      );
+      setUnreadCount(prev => Math.max(0, prev - 1));
+    } catch (err) {
+      console.error('Failed to mark notification as read:', err);
     }
-
-    setNotifications(prev =>
-      prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
-    );
-    setUnreadCount(prev => Math.max(0, prev - 1));
   };
 
   return {
