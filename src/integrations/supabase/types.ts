@@ -48,6 +48,42 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_methods: {
+        Row: {
+          card_type: string
+          cardholder_name: string
+          created_at: string | null
+          expiry_month: number
+          expiry_year: number
+          id: string
+          is_default: boolean | null
+          last_four_digits: string
+          user_id: string
+        }
+        Insert: {
+          card_type: string
+          cardholder_name: string
+          created_at?: string | null
+          expiry_month: number
+          expiry_year: number
+          id?: string
+          is_default?: boolean | null
+          last_four_digits: string
+          user_id: string
+        }
+        Update: {
+          card_type?: string
+          cardholder_name?: string
+          created_at?: string | null
+          expiry_month?: number
+          expiry_year?: number
+          id?: string
+          is_default?: boolean | null
+          last_four_digits?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           category: string
@@ -96,6 +132,102 @@ export type Database = {
           seller_name?: string
           stock?: number
           title?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          full_name: string | null
+          id: string
+          loyalty_points: number | null
+          phone_number: string | null
+          updated_at: string | null
+          wallet_balance: number | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id: string
+          loyalty_points?: number | null
+          phone_number?: string | null
+          updated_at?: string | null
+          wallet_balance?: number | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string
+          loyalty_points?: number | null
+          phone_number?: string | null
+          updated_at?: string | null
+          wallet_balance?: number | null
+        }
+        Relationships: []
+      }
+      shipping_addresses: {
+        Row: {
+          address_line1: string
+          address_line2: string | null
+          city: string
+          country: string
+          created_at: string | null
+          id: string
+          is_default: boolean | null
+          postal_code: string
+          state: string
+          user_id: string
+        }
+        Insert: {
+          address_line1: string
+          address_line2?: string | null
+          city: string
+          country?: string
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          postal_code: string
+          state: string
+          user_id: string
+        }
+        Update: {
+          address_line1?: string
+          address_line2?: string | null
+          city?: string
+          country?: string
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          postal_code?: string
+          state?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_security_settings: {
+        Row: {
+          created_at: string | null
+          id: string
+          two_factor_enabled: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          two_factor_enabled?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          two_factor_enabled?: boolean | null
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
