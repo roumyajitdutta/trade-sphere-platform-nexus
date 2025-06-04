@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -22,6 +21,7 @@ import OrderConfirmation from "./pages/buyer/OrderConfirmation";
 import SellerOrders from "./pages/seller/SellerOrders";
 import SellerAnalytics from "./pages/seller/SellerAnalytics";
 import BuyerDashboard from "./pages/buyer/BuyerDashboard";
+import BuyerOrdersPage from "./pages/buyer/BuyerOrdersPage";
 
 const queryClient = new QueryClient();
 
@@ -43,6 +43,7 @@ const App = () => (
                 <Route path="/checkout" element={<CheckoutPage />} />
                 <Route path="/orders/confirmation" element={<OrderConfirmation />} />
                 <Route path="/buyer/dashboard" element={<BuyerDashboard />} />
+                <Route path="/buyer/orders" element={<BuyerOrdersPage />} />
                 <Route path="/seller/dashboard" element={<SellerDashboard />} />
                 <Route path="/seller/products" element={<ManageProducts />} />
                 <Route path="/seller/products/new" element={<AddProduct />} />

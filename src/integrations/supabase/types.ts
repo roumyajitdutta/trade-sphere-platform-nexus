@@ -9,10 +9,53 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      order_items: {
+        Row: {
+          created_at: string | null
+          id: string
+          order_id: string
+          price_per_item: number
+          product_id: string
+          product_image: string | null
+          product_name: string
+          quantity: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          order_id: string
+          price_per_item: number
+          product_id: string
+          product_image?: string | null
+          product_name: string
+          quantity?: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          order_id?: string
+          price_per_item?: number
+          product_id?: string
+          product_image?: string | null
+          product_name?: string
+          quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orders: {
         Row: {
           buyer_id: string
+          courier_name: string | null
           created_at: string | null
+          estimated_delivery_date: string | null
           id: string
           payment_method: string
           products: Json
@@ -20,11 +63,14 @@ export type Database = {
           shipping_address: string
           status: string
           total: number
+          tracking_number: string | null
           updated_at: string | null
         }
         Insert: {
           buyer_id: string
+          courier_name?: string | null
           created_at?: string | null
+          estimated_delivery_date?: string | null
           id?: string
           payment_method: string
           products: Json
@@ -32,11 +78,14 @@ export type Database = {
           shipping_address: string
           status?: string
           total: number
+          tracking_number?: string | null
           updated_at?: string | null
         }
         Update: {
           buyer_id?: string
+          courier_name?: string | null
           created_at?: string | null
+          estimated_delivery_date?: string | null
           id?: string
           payment_method?: string
           products?: Json
@@ -44,6 +93,7 @@ export type Database = {
           shipping_address?: string
           status?: string
           total?: number
+          tracking_number?: string | null
           updated_at?: string | null
         }
         Relationships: []
