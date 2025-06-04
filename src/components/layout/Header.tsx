@@ -1,13 +1,13 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Search, ShoppingCart, User, MessageCircle } from 'lucide-react';
+import { ShoppingCart, User, MessageCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
+import SearchBar from '@/components/search/SearchBar';
 
 const Header = () => {
   const { user, logout } = useAuth();
@@ -26,34 +26,27 @@ const Header = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
+          <Link to="/" className="flex items-center space-x-2 flex-shrink-0">
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-lg">M</span>
             </div>
-            <span className="text-xl font-bold text-gray-900">Marketplace</span>
+            <span className="text-xl font-bold text-gray-900 hidden sm:block">Marketplace</span>
           </Link>
 
           {/* Search Bar */}
           {user && (
-            <div className="flex-1 max-w-lg mx-8">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <Input
-                  type="text"
-                  placeholder="Search products..."
-                  className="pl-10 w-full"
-                />
-              </div>
+            <div className="flex-1 max-w-2xl mx-4 lg:mx-8">
+              <SearchBar />
             </div>
           )}
 
           {/* User Actions */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 lg:space-x-4 flex-shrink-0">
             {user ? (
               <>
                 {getUserRole() === 'buyer' && (
                   <>
-                    <Button variant="ghost" size="sm" asChild>
+                    <Button variant="ghost" size="sm" asChild className="hidden sm:flex">
                       <Link to="/messages">
                         <MessageCircle className="w-4 h-4" />
                       </Link>
@@ -74,10 +67,15 @@ const Header = () => {
                 <NotificationBell />
                 
                 <div className="flex items-center space-x-2">
-                  <Button variant="ghost" size="sm" asChild>
+                  <Button variant="ghost" size="sm" asChild className="hidden lg:flex">
                     <Link to={`/${getUserRole()}/dashboard`}>
                       <User className="w-4 h-4 mr-2" />
                       {getUserName()}
+                    </Link>
+                  </Button>
+                  <Button variant="ghost" size="sm" asChild className="lg:hidden">
+                    <Link to={`/${getUserRole()}/dashboard`}>
+                      <User className="w-4 h-4" />
                     </Link>
                   </Button>
                   <Button variant="outline" size="sm" onClick={logout}>

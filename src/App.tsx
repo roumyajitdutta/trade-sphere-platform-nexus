@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -22,6 +23,7 @@ import SellerOrders from "./pages/seller/SellerOrders";
 import SellerAnalytics from "./pages/seller/SellerAnalytics";
 import BuyerDashboard from "./pages/buyer/BuyerDashboard";
 import BuyerOrdersPage from "./pages/buyer/BuyerOrdersPage";
+import SearchResultsPage from "./pages/SearchResultsPage";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +42,7 @@ const App = () => (
                 <Route path="/register" element={<RegisterPage />} />
                 <Route path="/cart" element={<CartPage />} />
                 <Route path="/products" element={<ProductListPage />} />
+                <Route path="/search" element={<SearchResultsPage />} />
                 <Route path="/checkout" element={<CheckoutPage />} />
                 <Route path="/orders/confirmation" element={<OrderConfirmation />} />
                 <Route path="/buyer/dashboard" element={<BuyerDashboard />} />
