@@ -2,29 +2,13 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
-import { formatDistanceToNow } from 'date-fns';
+import PendingOrdersTab from '@/components/seller/orders/PendingOrdersTab';
+import AcceptedOrdersTab from '@/components/seller/orders/AcceptedOrdersTab';
+import RejectedOrdersTab from '@/components/seller/orders/RejectedOrdersTab';
+import AllOrdersTab from '@/components/seller/orders/AllOrdersTab';
 
 interface Order {
   id: string;
@@ -39,7 +23,6 @@ interface Order {
 const SellerOrders = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [pendingAction, setPendingAction] = useState<{orderId: string, action: 'accepted' | 'rejected'} | null>(null);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -63,7 +46,6 @@ const SellerOrders = () => {
           const newOrder = payload.new as Order;
           setOrders(prev => [newOrder, ...prev]);
           
-          // Show toast notification
           toast({
             title: "New Order Received!",
             description: `Order for $${newOrder.total} has been placed`,
@@ -127,16 +109,21 @@ const SellerOrders = () => {
     setLoading(false);
   };
 
-  const handleConfirmAction = async () => {
-    if (!pendingAction) return;
-
-    const { orderId, action } = pendingAction;
-    
+  const updateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
+      console.log(`Updating order ${orderId} to status: ${newStatus}`);
+      
+      // Update local state immediately for better UX
+      setOrders(prev => 
+        prev.map(order => 
+          order.id === orderId ? { ...order, status: newStatus } : order
+        )
+      );
+
       const { error } = await supabase
         .from('orders')
         .update({ 
-          status: action,
+          status: newStatus,
           updated_at: new Date().toISOString()
         })
         .eq('id', orderId)
@@ -144,6 +131,12 @@ const SellerOrders = () => {
 
       if (error) {
         console.error('Error updating order:', error);
+        // Revert local state on error
+        setOrders(prev => 
+          prev.map(order => 
+            order.id === orderId ? { ...order, status: order.status } : order
+          )
+        );
         toast({
           title: "Error",
           description: "Failed to update order status",
@@ -160,20 +153,21 @@ const SellerOrders = () => {
             .from('notifications' as any)
             .insert({
               user_id: order.buyer_id,
-              type: action === 'accepted' ? 'order_accepted' : 'order_rejected',
-              title: `Order ${action.charAt(0).toUpperCase() + action.slice(1)}`,
-              message: `Your order for $${order.total} has been ${action}`,
+              type: newStatus === 'accepted' ? 'order_accepted' : 
+                    newStatus === 'rejected' ? 'order_rejected' :
+                    newStatus === 'shipped' ? 'order_shipped' : 'order_updated',
+              title: `Order ${newStatus.charAt(0).toUpperCase() + newStatus.slice(1)}`,
+              message: `Your order for $${order.total} has been ${newStatus}`,
               order_id: orderId
             });
         } catch (notificationError) {
           console.error('Error creating notification:', notificationError);
-          // Don't fail the whole operation if notification fails
         }
       }
 
       toast({
         title: "Success",
-        description: `Order ${action} successfully`,
+        description: `Order ${newStatus} successfully`,
       });
     } catch (err) {
       console.error('Failed to update order:', err);
@@ -182,21 +176,25 @@ const SellerOrders = () => {
         description: "Failed to update order status",
         variant: "destructive"
       });
-    } finally {
-      setPendingAction(null);
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'accepted': return 'bg-green-100 text-green-800';
-      case 'rejected': return 'bg-red-100 text-red-800';
-      case 'shipped': return 'bg-blue-100 text-blue-800';
-      case 'delivered': return 'bg-purple-100 text-purple-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
+  const handleAcceptOrder = (orderId: string) => {
+    updateOrderStatus(orderId, 'accepted');
   };
+
+  const handleRejectOrder = (orderId: string) => {
+    updateOrderStatus(orderId, 'rejected');
+  };
+
+  const handleMarkAsShipped = (orderId: string) => {
+    updateOrderStatus(orderId, 'shipped');
+  };
+
+  // Filter orders by status
+  const pendingOrders = orders.filter(order => order.status === 'pending');
+  const acceptedOrders = orders.filter(order => order.status === 'accepted');
+  const rejectedOrders = orders.filter(order => order.status === 'rejected');
 
   if (loading) {
     return (
@@ -209,129 +207,64 @@ const SellerOrders = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Orders</h1>
+        <h1 className="text-2xl font-bold">Orders Management</h1>
         <Badge variant="outline">
           {orders.length} total orders
         </Badge>
       </div>
 
-      {orders.length === 0 ? (
-        <div className="text-center py-12">
-          <div className="text-gray-500 mb-2">No orders yet</div>
-          <div className="text-sm text-gray-400">
-            Orders will appear here when customers place them
-          </div>
-        </div>
-      ) : (
-        <div className="bg-white rounded-lg border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Order ID</TableHead>
-                <TableHead>Products</TableHead>
-                <TableHead>Total</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {orders.map((order) => (
-                <TableRow key={order.id}>
-                  <TableCell className="font-mono text-sm">
-                    {order.id.slice(0, 8)}...
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm">
-                      {Array.isArray(order.products) ? 
-                        `${order.products.length} item(s)` : 
-                        'Product details'
-                      }
-                    </div>
-                  </TableCell>
-                  <TableCell className="font-medium">
-                    ${order.total}
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={getStatusColor(order.status)}>
-                      {order.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-sm text-gray-500">
-                    {formatDistanceToNow(new Date(order.created_at), { addSuffix: true })}
-                  </TableCell>
-                  <TableCell>
-                    {order.status === 'pending' && (
-                      <div className="flex gap-2">
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              size="sm"
-                              className="bg-green-600 hover:bg-green-700"
-                              onClick={() => setPendingAction({ orderId: order.id, action: 'accepted' })}
-                            >
-                              Accept
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Accept Order</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Are you sure you want to accept this order for ${order.total}? 
-                                This action will notify the buyer and update the order status.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel onClick={() => setPendingAction(null)}>
-                                Cancel
-                              </AlertDialogCancel>
-                              <AlertDialogAction onClick={handleConfirmAction}>
-                                Yes, Accept Order
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+      <Tabs defaultValue="pending" className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="pending" className="relative">
+            Pending
+            {pendingOrders.length > 0 && (
+              <Badge className="ml-2 bg-yellow-500 text-white text-xs">
+                {pendingOrders.length}
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="accepted" className="relative">
+            Accepted
+            {acceptedOrders.length > 0 && (
+              <Badge className="ml-2 bg-green-500 text-white text-xs">
+                {acceptedOrders.length}
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="rejected" className="relative">
+            Rejected
+            {rejectedOrders.length > 0 && (
+              <Badge className="ml-2 bg-red-500 text-white text-xs">
+                {rejectedOrders.length}
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="all">All Orders</TabsTrigger>
+        </TabsList>
 
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => setPendingAction({ orderId: order.id, action: 'rejected' })}
-                            >
-                              Reject
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Reject Order</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Are you sure you want to reject this order for ${order.total}? 
-                                This action cannot be undone and will notify the buyer.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel onClick={() => setPendingAction(null)}>
-                                Cancel
-                              </AlertDialogCancel>
-                              <AlertDialogAction 
-                                onClick={handleConfirmAction}
-                                className="bg-red-600 hover:bg-red-700"
-                              >
-                                Yes, Reject Order
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      )}
+        <TabsContent value="pending">
+          <PendingOrdersTab 
+            orders={pendingOrders}
+            onAcceptOrder={handleAcceptOrder}
+            onRejectOrder={handleRejectOrder}
+          />
+        </TabsContent>
+
+        <TabsContent value="accepted">
+          <AcceptedOrdersTab 
+            orders={acceptedOrders}
+            onMarkAsShipped={handleMarkAsShipped}
+          />
+        </TabsContent>
+
+        <TabsContent value="rejected">
+          <RejectedOrdersTab orders={rejectedOrders} />
+        </TabsContent>
+
+        <TabsContent value="all">
+          <AllOrdersTab orders={orders} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
