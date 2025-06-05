@@ -31,12 +31,13 @@ const getStatusIcon = (status: string) => {
   switch (status.toLowerCase()) {
     case 'pending':
       return <Clock className="w-4 h-4" />;
-    case 'confirmed':
+    case 'accepted':
       return <Package className="w-4 h-4" />;
     case 'shipped':
       return <Truck className="w-4 h-4" />;
     case 'delivered':
       return <CheckCircle className="w-4 h-4" />;
+    case 'rejected':
     case 'cancelled':
       return <XCircle className="w-4 h-4" />;
     default:
@@ -47,17 +48,37 @@ const getStatusIcon = (status: string) => {
 const getStatusColor = (status: string) => {
   switch (status.toLowerCase()) {
     case 'pending':
-      return 'bg-yellow-100 text-yellow-800';
-    case 'confirmed':
-      return 'bg-blue-100 text-blue-800';
+      return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+    case 'accepted':
+      return 'bg-green-100 text-green-800 border-green-200';
     case 'shipped':
-      return 'bg-purple-100 text-purple-800';
+      return 'bg-blue-100 text-blue-800 border-blue-200';
     case 'delivered':
-      return 'bg-green-100 text-green-800';
+      return 'bg-emerald-100 text-emerald-800 border-emerald-200';
+    case 'rejected':
     case 'cancelled':
-      return 'bg-red-100 text-red-800';
+      return 'bg-red-100 text-red-800 border-red-200';
     default:
-      return 'bg-gray-100 text-gray-800';
+      return 'bg-gray-100 text-gray-800 border-gray-200';
+  }
+};
+
+const getStatusMessage = (status: string) => {
+  switch (status.toLowerCase()) {
+    case 'pending':
+      return 'Waiting for seller confirmation';
+    case 'accepted':
+      return 'Order confirmed by seller';
+    case 'shipped':
+      return 'Order has been shipped';
+    case 'delivered':
+      return 'Order delivered successfully';
+    case 'rejected':
+      return 'Order rejected by seller';
+    case 'cancelled':
+      return 'Order cancelled';
+    default:
+      return '';
   }
 };
 
@@ -78,10 +99,15 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onViewDetails }) => {
                   {format(new Date(order.created_at), 'MMM dd, yyyy')}
                 </p>
               </div>
-              <Badge className={`flex items-center gap-1 ${getStatusColor(order.status)}`}>
-                {getStatusIcon(order.status)}
-                {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-              </Badge>
+              <div className="text-right">
+                <Badge className={`flex items-center gap-1 border ${getStatusColor(order.status)}`}>
+                  {getStatusIcon(order.status)}
+                  {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                </Badge>
+                <p className="text-xs text-gray-500 mt-1">
+                  {getStatusMessage(order.status)}
+                </p>
+              </div>
             </div>
 
             {/* Product Thumbnails */}

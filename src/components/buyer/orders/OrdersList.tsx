@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -21,7 +22,7 @@ const OrdersList: React.FC<OrdersListProps> = ({ onOrderSelect }) => {
   const [dateFilter, setDateFilter] = useState('all');
   const [orders, setOrders] = useState<any[]>([]);
 
-  const { data: initialOrders, isLoading, error } = useQuery({
+  const { data: initialOrders, isLoading, error, refetch } = useQuery({
     queryKey: ['buyer-orders', user?.id],
     queryFn: async () => {
       if (!user) return [];
@@ -54,12 +55,14 @@ const OrdersList: React.FC<OrdersListProps> = ({ onOrderSelect }) => {
     }
   }, [initialOrders]);
 
-  // Set up real-time subscription for order updates
+  // Enhanced real-time subscription for order updates
   useEffect(() => {
     if (!user) return;
 
+    console.log('Setting up real-time subscription for buyer orders');
+    
     const channel = supabase
-      .channel('buyer-orders')
+      .channel('buyer-orders-realtime')
       .on(
         'postgres_changes',
         {
@@ -69,21 +72,81 @@ const OrdersList: React.FC<OrdersListProps> = ({ onOrderSelect }) => {
           filter: `buyer_id=eq.${user.id}`
         },
         (payload) => {
-          console.log('Order updated:', payload);
+          console.log('Real-time order update received:', payload);
           const updatedOrder = payload.new as any;
-          setOrders(prev => 
-            prev.map(order => 
-              order.id === updatedOrder.id ? { ...order, ...updatedOrder } : order
-            )
-          );
+          
+          // Update the orders state immediately
+          setOrders(prev => {
+            const updatedOrders = prev.map(order => {
+              if (order.id === updatedOrder.id) {
+                console.log(`Updating order ${order.id} status from ${order.status} to ${updatedOrder.status}`);
+                return { ...order, ...updatedOrder };
+              }
+              return order;
+            });
+            
+            console.log('Updated orders state:', updatedOrders);
+            return updatedOrders;
+          });
         }
       )
-      .subscribe();
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'orders',
+          filter: `buyer_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('New order received:', payload);
+          const newOrder = payload.new as any;
+          
+          // Fetch the complete order data with order_items
+          const fetchCompleteOrder = async () => {
+            const { data, error } = await supabase
+              .from('orders')
+              .select(`
+                *,
+                order_items (
+                  id,
+                  product_name,
+                  product_image,
+                  quantity,
+                  price_per_item
+                )
+              `)
+              .eq('id', newOrder.id)
+              .single();
+              
+            if (!error && data) {
+              setOrders(prev => [data, ...prev]);
+            }
+          };
+          
+          fetchCompleteOrder();
+        }
+      )
+      .subscribe((status) => {
+        console.log('Realtime subscription status:', status);
+      });
 
     return () => {
+      console.log('Cleaning up real-time subscription');
       supabase.removeChannel(channel);
     };
   }, [user]);
+
+  // Force refresh orders when user focuses on the page
+  useEffect(() => {
+    const handleFocus = () => {
+      console.log('Page focused, refreshing orders');
+      refetch();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [refetch]);
 
   const filteredOrders = orders?.filter(order => {
     const matchesSearch = searchTerm === '' || 
