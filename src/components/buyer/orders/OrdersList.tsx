@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -20,8 +19,9 @@ const OrdersList: React.FC<OrdersListProps> = ({ onOrderSelect }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('all');
+  const [orders, setOrders] = useState<any[]>([]);
 
-  const { data: orders, isLoading, error } = useQuery({
+  const { data: initialOrders, isLoading, error } = useQuery({
     queryKey: ['buyer-orders', user?.id],
     queryFn: async () => {
       if (!user) return [];
@@ -46,6 +46,44 @@ const OrdersList: React.FC<OrdersListProps> = ({ onOrderSelect }) => {
     },
     enabled: !!user,
   });
+
+  // Set initial orders when data is loaded
+  useEffect(() => {
+    if (initialOrders) {
+      setOrders(initialOrders);
+    }
+  }, [initialOrders]);
+
+  // Set up real-time subscription for order updates
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('buyer-orders')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'orders',
+          filter: `buyer_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('Order updated:', payload);
+          const updatedOrder = payload.new as any;
+          setOrders(prev => 
+            prev.map(order => 
+              order.id === updatedOrder.id ? { ...order, ...updatedOrder } : order
+            )
+          );
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
 
   const filteredOrders = orders?.filter(order => {
     const matchesSearch = searchTerm === '' || 
@@ -135,7 +173,8 @@ const OrdersList: React.FC<OrdersListProps> = ({ onOrderSelect }) => {
                 <SelectContent>
                   <SelectItem value="all">All Status</SelectItem>
                   <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="confirmed">Confirmed</SelectItem>
+                  <SelectItem value="accepted">Accepted</SelectItem>
+                  <SelectItem value="rejected">Rejected</SelectItem>
                   <SelectItem value="shipped">Shipped</SelectItem>
                   <SelectItem value="delivered">Delivered</SelectItem>
                   <SelectItem value="cancelled">Cancelled</SelectItem>

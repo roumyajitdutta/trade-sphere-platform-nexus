@@ -12,6 +12,17 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { toast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -28,6 +39,7 @@ interface Order {
 const SellerOrders = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [pendingAction, setPendingAction] = useState<{orderId: string, action: 'accepted' | 'rejected'} | null>(null);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -115,12 +127,16 @@ const SellerOrders = () => {
     setLoading(false);
   };
 
-  const updateOrderStatus = async (orderId: string, status: 'accepted' | 'rejected') => {
+  const handleConfirmAction = async () => {
+    if (!pendingAction) return;
+
+    const { orderId, action } = pendingAction;
+    
     try {
       const { error } = await supabase
         .from('orders')
         .update({ 
-          status,
+          status: action,
           updated_at: new Date().toISOString()
         })
         .eq('id', orderId)
@@ -144,9 +160,9 @@ const SellerOrders = () => {
             .from('notifications' as any)
             .insert({
               user_id: order.buyer_id,
-              type: status === 'accepted' ? 'order_accepted' : 'order_rejected',
-              title: `Order ${status.charAt(0).toUpperCase() + status.slice(1)}`,
-              message: `Your order for $${order.total} has been ${status}`,
+              type: action === 'accepted' ? 'order_accepted' : 'order_rejected',
+              title: `Order ${action.charAt(0).toUpperCase() + action.slice(1)}`,
+              message: `Your order for $${order.total} has been ${action}`,
               order_id: orderId
             });
         } catch (notificationError) {
@@ -157,7 +173,7 @@ const SellerOrders = () => {
 
       toast({
         title: "Success",
-        description: `Order ${status} successfully`,
+        description: `Order ${action} successfully`,
       });
     } catch (err) {
       console.error('Failed to update order:', err);
@@ -166,6 +182,8 @@ const SellerOrders = () => {
         description: "Failed to update order status",
         variant: "destructive"
       });
+    } finally {
+      setPendingAction(null);
     }
   };
 
@@ -245,20 +263,66 @@ const SellerOrders = () => {
                   <TableCell>
                     {order.status === 'pending' && (
                       <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          onClick={() => updateOrderStatus(order.id, 'accepted')}
-                          className="bg-green-600 hover:bg-green-700"
-                        >
-                          Accept
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => updateOrderStatus(order.id, 'rejected')}
-                        >
-                          Reject
-                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              size="sm"
+                              className="bg-green-600 hover:bg-green-700"
+                              onClick={() => setPendingAction({ orderId: order.id, action: 'accepted' })}
+                            >
+                              Accept
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Accept Order</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to accept this order for ${order.total}? 
+                                This action will notify the buyer and update the order status.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel onClick={() => setPendingAction(null)}>
+                                Cancel
+                              </AlertDialogCancel>
+                              <AlertDialogAction onClick={handleConfirmAction}>
+                                Yes, Accept Order
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => setPendingAction({ orderId: order.id, action: 'rejected' })}
+                            >
+                              Reject
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Reject Order</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to reject this order for ${order.total}? 
+                                This action cannot be undone and will notify the buyer.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel onClick={() => setPendingAction(null)}>
+                                Cancel
+                              </AlertDialogCancel>
+                              <AlertDialogAction 
+                                onClick={handleConfirmAction}
+                                className="bg-red-600 hover:bg-red-700"
+                              >
+                                Yes, Reject Order
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     )}
                   </TableCell>
