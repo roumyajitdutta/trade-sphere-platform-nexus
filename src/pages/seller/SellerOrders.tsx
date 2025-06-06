@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -170,30 +169,6 @@ const SellerOrders = () => {
       }
 
       console.log('Order updated successfully:', data);
-
-      // Create notification for buyer
-      const order = orders.find(o => o.id === orderId);
-      if (order) {
-        try {
-          const { error: notificationError } = await supabase
-            .from('notifications' as any)
-            .insert({
-              user_id: order.buyer_id,
-              type: newStatus === 'accepted' ? 'order_accepted' : 
-                    newStatus === 'rejected' ? 'order_rejected' :
-                    newStatus === 'shipped' ? 'order_shipped' : 'order_updated',
-              title: `Order ${newStatus.charAt(0).toUpperCase() + newStatus.slice(1)}`,
-              message: `Your order for $${order.total} has been ${newStatus}`,
-              order_id: orderId
-            });
-            
-          if (notificationError) {
-            console.error('Error creating notification:', notificationError);
-          }
-        } catch (notificationError) {
-          console.error('Error creating notification:', notificationError);
-        }
-      }
 
       toast({
         title: "Success",
