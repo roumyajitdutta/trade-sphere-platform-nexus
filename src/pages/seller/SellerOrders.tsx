@@ -110,46 +110,72 @@ const SellerOrders = () => {
   };
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to update orders",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
       console.log(`Updating order ${orderId} to status: ${newStatus}`);
       
       // Update local state immediately for better UX
+      const previousOrders = [...orders];
       setOrders(prev => 
         prev.map(order => 
           order.id === orderId ? { ...order, status: newStatus } : order
         )
       );
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('orders')
         .update({ 
           status: newStatus,
           updated_at: new Date().toISOString()
         })
         .eq('id', orderId)
-        .eq('seller_id', user?.id);
+        .eq('seller_id', user.id)
+        .select();
 
       if (error) {
         console.error('Error updating order:', error);
+        
         // Revert local state on error
-        setOrders(prev => 
-          prev.map(order => 
-            order.id === orderId ? { ...order, status: order.status } : order
-          )
-        );
-        toast({
-          title: "Error",
-          description: "Failed to update order status",
-          variant: "destructive"
-        });
+        setOrders(previousOrders);
+        
+        // Provide specific error messages
+        if (error.message?.includes('RLS') || error.message?.includes('policy')) {
+          toast({
+            title: "Permission Error",
+            description: "You don't have permission to update this order. Please contact support.",
+            variant: "destructive"
+          });
+        } else if (error.message?.includes('not found')) {
+          toast({
+            title: "Order Not Found",
+            description: "This order may have been deleted or you don't have access to it.",
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "Update Failed",
+            description: `Failed to update order status: ${error.message}`,
+            variant: "destructive"
+          });
+        }
         return;
       }
+
+      console.log('Order updated successfully:', data);
 
       // Create notification for buyer
       const order = orders.find(o => o.id === orderId);
       if (order) {
         try {
-          await supabase
+          const { error: notificationError } = await supabase
             .from('notifications' as any)
             .insert({
               user_id: order.buyer_id,
@@ -160,6 +186,10 @@ const SellerOrders = () => {
               message: `Your order for $${order.total} has been ${newStatus}`,
               order_id: orderId
             });
+            
+          if (notificationError) {
+            console.error('Error creating notification:', notificationError);
+          }
         } catch (notificationError) {
           console.error('Error creating notification:', notificationError);
         }
@@ -171,9 +201,17 @@ const SellerOrders = () => {
       });
     } catch (err) {
       console.error('Failed to update order:', err);
+      
+      // Revert local state on error
+      setOrders(prev => 
+        prev.map(order => 
+          order.id === orderId ? { ...order, status: order.status } : order
+        )
+      );
+      
       toast({
         title: "Error",
-        description: "Failed to update order status",
+        description: "An unexpected error occurred while updating the order",
         variant: "destructive"
       });
     }
