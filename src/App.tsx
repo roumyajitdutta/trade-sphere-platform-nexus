@@ -17,6 +17,7 @@ import NotFound from "./pages/NotFound";
 import AddProduct from "./pages/seller/AddProduct";
 import ManageProducts from "./pages/seller/ManageProducts";
 import ProductListPage from "./pages/buyer/ProductListPage";
+import ProductDetailPage from "./pages/ProductDetailPage";
 import CheckoutPage from "./pages/buyer/CheckoutPage";
 import OrderConfirmation from "./pages/buyer/OrderConfirmation";
 import SellerOrders from "./pages/seller/SellerOrders";
@@ -42,6 +43,7 @@ const App = () => (
                 <Route path="/register" element={<RegisterPage />} />
                 <Route path="/cart" element={<CartPage />} />
                 <Route path="/products" element={<ProductListPage />} />
+                <Route path="/products/:id" element={<ProductDetailPage />} />
                 <Route path="/search" element={<SearchResultsPage />} />
                 <Route path="/checkout" element={<CheckoutPage />} />
                 <Route path="/orders/confirmation" element={<OrderConfirmation />} />
