@@ -1,18 +1,38 @@
-# Welcome to your Lovable project
+# Welcome to my Ecommerce webapp development project
 
 ## Project info
 
-**URL**: https://lovable.dev/projects/26ec18ca-ab6d-43b0-ae3a-5b52883788ad
+The platform provides:
 
-## How can I edit this code?
+A Seller Portal to list products, manage stock, view orders, and update fulfillment statuses.
 
-There are several ways of editing your application.
+A Buyer Interface to search, browse, purchase products, manage profiles, and track orders.
 
-**Use Lovable**
+Real-time communication between both sides using Supabase Realtime and scalable PostgreSQL structure.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/26ec18ca-ab6d-43b0-ae3a-5b52883788ad) and start prompting.
+Key Features:
 
-Changes made via Lovable will be committed automatically to this repo.
+Backend (PostgreSQL):
+Authentication with role-based access (buyer/seller)
+
+Product management system (CRUD for sellers)
+
+Order management with status tracking
+
+Secure row-level policies for user isolation
+
+Payment method storage & checkout logic
+
+Realtime updates for orders, stock, and notifications
+
+Target Users:
+Small to mid-sized online sellers needing a platform
+
+Buyers seeking a clean, intuitive e-commerce experience
+
+Admins (optional future role) for platform oversight and data insights
+
+
 
 **Use your preferred IDE**
 
@@ -23,17 +43,7 @@ The only requirement is having Node.js & npm installed - [install with nvm](http
 Follow these steps:
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
 ```
 
 **Edit a file directly in GitHub**
@@ -60,14 +70,6 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/26ec18ca-ab6d-43b0-ae3a-5b52883788ad) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
 
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
