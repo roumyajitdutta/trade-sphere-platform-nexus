@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, ShoppingCart, Store, Shield } from 'lucide-react';
@@ -6,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import ProductGrid from '@/components/products/ProductGrid';
+import HeroBanner from '@/components/home/HeroBanner';
 import { supabase } from '@/integrations/supabase/client';
 import { Product } from '@/types';
 
@@ -73,34 +73,8 @@ const HomePage = () => {
   if (!user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-        {/* Hero Section */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
-          <div className="text-center">
-            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
-              Your Premier
-              <span className="text-blue-600 block">Marketplace</span>
-            </h1>
-            <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-              Connect buyers and sellers in a secure, feature-rich platform. 
-              Buy amazing products or start selling your own today.
-            </p>
-            
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" asChild className="text-lg px-8 py-4">
-                <Link to="/register">
-                  Start Shopping
-                  <ShoppingCart className="ml-2 w-5 h-5" />
-                </Link>
-              </Button>
-              <Button size="lg" variant="outline" asChild className="text-lg px-8 py-4">
-                <Link to="/register">
-                  Become a Seller
-                  <Store className="ml-2 w-5 h-5" />
-                </Link>
-              </Button>
-            </div>
-          </div>
-        </div>
+        {/* Hero Banner */}
+        <HeroBanner />
 
         {/* Features Section */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -168,147 +142,152 @@ const HomePage = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Welcome Banner */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg p-8 mb-8">
-        <h1 className="text-3xl font-bold mb-2">
-          Welcome back, {getUserName()}!
-        </h1>
-        <p className="text-blue-100">
-          {getUserRole() === 'buyer' 
-            ? 'Discover amazing products from trusted sellers'
-            : getUserRole() === 'seller'
-            ? 'Manage your store and grow your business'
-            : 'Monitor platform activity and moderate content'
-          }
-        </p>
-      </div>
+    <div className="min-h-screen">
+      {/* Hero Banner for logged-in users */}
+      <HeroBanner />
 
-      {/* Quick Actions */}
-      <div className="grid md:grid-cols-3 gap-6 mb-12">
-        {getUserRole() === 'buyer' && (
-          <>
-            <Link to="/products" className="block">
-              <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-                <CardContent className="p-6 text-center">
-                  <ShoppingCart className="w-8 h-8 text-blue-600 mx-auto mb-3" />
-                  <h3 className="font-semibold mb-2">Browse Products</h3>
-                  <p className="text-gray-600 text-sm">Explore our marketplace</p>
-                </CardContent>
-              </Card>
-            </Link>
-            
-            <Link to="/buyer/orders" className="block">
-              <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-                <CardContent className="p-6 text-center">
-                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <span className="text-green-600 font-semibold">📦</span>
-                  </div>
-                  <h3 className="font-semibold mb-2">My Orders</h3>
-                  <p className="text-gray-600 text-sm">Track your purchases</p>
-                </CardContent>
-              </Card>
-            </Link>
-            
-            <Link to="/cart" className="block">
-              <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-                <CardContent className="p-6 text-center">
-                  <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <span className="text-orange-600 font-semibold">🛒</span>
-                  </div>
-                  <h3 className="font-semibold mb-2">My Cart</h3>
-                  <p className="text-gray-600 text-sm">Review items to buy</p>
-                </CardContent>
-              </Card>
-            </Link>
-          </>
-        )}
-        
-        {getUserRole() === 'seller' && (
-          <>
-            <Link to="/seller/products" className="block">
-              <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-                <CardContent className="p-6 text-center">
-                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <span className="text-blue-600 font-semibold">📦</span>
-                  </div>
-                  <h3 className="font-semibold mb-2">My Products</h3>
-                  <p className="text-gray-600 text-sm">Manage your inventory</p>
-                </CardContent>
-              </Card>
-            </Link>
-            
-            <Link to="/seller/orders" className="block">
-              <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-                <CardContent className="p-6 text-center">
-                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <span className="text-green-600 font-semibold">📋</span>
-                  </div>
-                  <h3 className="font-semibold mb-2">Orders</h3>
-                  <p className="text-gray-600 text-sm">Process customer orders</p>
-                </CardContent>
-              </Card>
-            </Link>
-            
-            <Link to="/seller/analytics" className="block">
-              <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-                <CardContent className="p-6 text-center">
-                  <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <span className="text-purple-600 font-semibold">📊</span>
-                  </div>
-                  <h3 className="font-semibold mb-2">Analytics</h3>
-                  <p className="text-gray-600 text-sm">View sales performance</p>
-                </CardContent>
-              </Card>
-            </Link>
-          </>
-        )}
-        
-        {getUserRole() === 'admin' && (
-          <>
-            <Link to="/admin/users" className="block">
-              <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-                <CardContent className="p-6 text-center">
-                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <span className="text-blue-600 font-semibold">👥</span>
-                  </div>
-                  <h3 className="font-semibold mb-2">Users</h3>
-                  <p className="text-gray-600 text-sm">Manage platform users</p>
-                </CardContent>
-              </Card>
-            </Link>
-            
-            <Link to="/admin/products" className="block">
-              <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-                <CardContent className="p-6 text-center">
-                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <span className="text-green-600 font-semibold">🛍️</span>
-                  </div>
-                  <h3 className="font-semibold mb-2">Products</h3>
-                  <p className="text-gray-600 text-sm">Moderate listings</p>
-                </CardContent>
-              </Card>
-            </Link>
-            
-            <Link to="/admin/analytics" className="block">
-              <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-                <CardContent className="p-6 text-center">
-                  <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <span className="text-purple-600 font-semibold">📈</span>
-                  </div>
-                  <h3 className="font-semibold mb-2">Analytics</h3>
-                  <p className="text-gray-600 text-sm">Platform insights</p>
-                </CardContent>
-              </Card>
-            </Link>
-          </>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Welcome Banner */}
+        <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg p-8 mb-8">
+          <h1 className="text-3xl font-bold mb-2">
+            Welcome back, {getUserName()}!
+          </h1>
+          <p className="text-blue-100">
+            {getUserRole() === 'buyer' 
+              ? 'Discover amazing products from trusted sellers'
+              : getUserRole() === 'seller'
+              ? 'Manage your store and grow your business'
+              : 'Monitor platform activity and moderate content'
+            }
+          </p>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="grid md:grid-cols-3 gap-6 mb-12">
+          {getUserRole() === 'buyer' && (
+            <>
+              <Link to="/products" className="block">
+                <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+                  <CardContent className="p-6 text-center">
+                    <ShoppingCart className="w-8 h-8 text-blue-600 mx-auto mb-3" />
+                    <h3 className="font-semibold mb-2">Browse Products</h3>
+                    <p className="text-gray-600 text-sm">Explore our marketplace</p>
+                  </CardContent>
+                </Card>
+              </Link>
+              
+              <Link to="/buyer/orders" className="block">
+                <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+                  <CardContent className="p-6 text-center">
+                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <span className="text-green-600 font-semibold">📦</span>
+                    </div>
+                    <h3 className="font-semibold mb-2">My Orders</h3>
+                    <p className="text-gray-600 text-sm">Track your purchases</p>
+                  </CardContent>
+                </Card>
+              </Link>
+              
+              <Link to="/cart" className="block">
+                <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+                  <CardContent className="p-6 text-center">
+                    <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <span className="text-orange-600 font-semibold">🛒</span>
+                    </div>
+                    <h3 className="font-semibold mb-2">My Cart</h3>
+                    <p className="text-gray-600 text-sm">Review items to buy</p>
+                  </CardContent>
+                </Card>
+              </Link>
+            </>
+          )}
+          
+          {getUserRole() === 'seller' && (
+            <>
+              <Link to="/seller/products" className="block">
+                <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+                  <CardContent className="p-6 text-center">
+                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <span className="text-blue-600 font-semibold">📦</span>
+                    </div>
+                    <h3 className="font-semibold mb-2">My Products</h3>
+                    <p className="text-gray-600 text-sm">Manage your inventory</p>
+                  </CardContent>
+                </Card>
+              </Link>
+              
+              <Link to="/seller/orders" className="block">
+                <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+                  <CardContent className="p-6 text-center">
+                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <span className="text-green-600 font-semibold">📋</span>
+                    </div>
+                    <h3 className="font-semibold mb-2">Orders</h3>
+                    <p className="text-gray-600 text-sm">Process customer orders</p>
+                  </CardContent>
+                </Card>
+              </Link>
+              
+              <Link to="/seller/analytics" className="block">
+                <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+                  <CardContent className="p-6 text-center">
+                    <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <span className="text-purple-600 font-semibold">📊</span>
+                    </div>
+                    <h3 className="font-semibold mb-2">Analytics</h3>
+                    <p className="text-gray-600 text-sm">View sales performance</p>
+                  </CardContent>
+                </Card>
+              </Link>
+            </>
+          )}
+          
+          {getUserRole() === 'admin' && (
+            <>
+              <Link to="/admin/users" className="block">
+                <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+                  <CardContent className="p-6 text-center">
+                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <span className="text-blue-600 font-semibold">👥</span>
+                    </div>
+                    <h3 className="font-semibold mb-2">Users</h3>
+                    <p className="text-gray-600 text-sm">Manage platform users</p>
+                  </CardContent>
+                </Card>
+              </Link>
+              
+              <Link to="/admin/products" className="block">
+                <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+                  <CardContent className="p-6 text-center">
+                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <span className="text-green-600 font-semibold">🛍️</span>
+                    </div>
+                    <h3 className="font-semibold mb-2">Products</h3>
+                    <p className="text-gray-600 text-sm">Moderate listings</p>
+                  </CardContent>
+                </Card>
+              </Link>
+              
+              <Link to="/admin/analytics" className="block">
+                <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+                  <CardContent className="p-6 text-center">
+                    <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <span className="text-purple-600 font-semibold">📈</span>
+                    </div>
+                    <h3 className="font-semibold mb-2">Analytics</h3>
+                    <p className="text-gray-600 text-sm">Platform insights</p>
+                  </CardContent>
+                </Card>
+              </Link>
+            </>
+          )}
+        </div>
+
+        {/* Featured Products */}
+        {!isLoading && featuredProducts.length > 0 && (
+          <ProductGrid products={featuredProducts} title="Featured Products" />
         )}
       </div>
-
-      {/* Featured Products */}
-      {!isLoading && featuredProducts.length > 0 && (
-        <ProductGrid products={featuredProducts} title="Featured Products" />
-      )}
     </div>
   );
 };
