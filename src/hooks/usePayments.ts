@@ -41,7 +41,14 @@ export const usePayments = () => {
       const { data, error } = await query;
 
       if (error) throw error;
-      setTransactions(data || []);
+      
+      // Type cast the data properly
+      const typedData: PaymentTransaction[] = (data || []).map(transaction => ({
+        ...transaction,
+        status: transaction.status as PaymentTransaction['status']
+      }));
+      
+      setTransactions(typedData);
     } catch (error) {
       console.error('Error fetching transactions:', error);
       toast({
@@ -78,8 +85,13 @@ export const usePayments = () => {
 
       if (error) throw error;
 
-      setTransactions(prev => [data, ...prev]);
-      return data;
+      const typedData: PaymentTransaction = {
+        ...data,
+        status: data.status as PaymentTransaction['status']
+      };
+
+      setTransactions(prev => [typedData, ...prev]);
+      return typedData;
     } catch (error) {
       console.error('Error creating transaction:', error);
       toast({
@@ -112,11 +124,16 @@ export const usePayments = () => {
 
       if (error) throw error;
 
+      const typedData: PaymentTransaction = {
+        ...data,
+        status: data.status as PaymentTransaction['status']
+      };
+
       setTransactions(prev => 
-        prev.map(t => t.id === transactionId ? data : t)
+        prev.map(t => t.id === transactionId ? typedData : t)
       );
 
-      return data;
+      return typedData;
     } catch (error) {
       console.error('Error updating transaction status:', error);
       toast({

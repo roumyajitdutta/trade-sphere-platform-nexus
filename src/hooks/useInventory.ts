@@ -32,7 +32,14 @@ export const useInventory = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setInventoryLogs(data || []);
+      
+      // Type cast the data properly
+      const typedData: InventoryLog[] = (data || []).map(log => ({
+        ...log,
+        change_type: log.change_type as InventoryLog['change_type']
+      }));
+      
+      setInventoryLogs(typedData);
     } catch (error) {
       console.error('Error fetching inventory logs:', error);
       toast({

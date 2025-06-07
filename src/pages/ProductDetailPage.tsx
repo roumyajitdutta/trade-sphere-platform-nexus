@@ -45,13 +45,13 @@ const ProductDetailPage = () => {
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-            <ProductImageCarousel images={product.images} title={product.title} />
+            <ProductImageCarousel images={product.images} productTitle={product.title} />
             <ProductInfoPanel product={product} />
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
             <div className="lg:col-span-2">
-              <ProductSpecifications />
+              <ProductSpecifications product={product} />
             </div>
           </div>
 
