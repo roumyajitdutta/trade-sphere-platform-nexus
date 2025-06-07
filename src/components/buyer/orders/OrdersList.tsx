@@ -1,8 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAnalytics } from '@/hooks/useAnalytics';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -17,6 +17,7 @@ interface OrdersListProps {
 
 const OrdersList: React.FC<OrdersListProps> = ({ onOrderSelect }) => {
   const { user } = useAuth();
+  const { logUserActivity } = useAnalytics();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('all');
@@ -52,8 +53,10 @@ const OrdersList: React.FC<OrdersListProps> = ({ onOrderSelect }) => {
   useEffect(() => {
     if (initialOrders) {
       setOrders(initialOrders);
+      // Log user activity
+      logUserActivity('view_orders', 'User viewed their orders list');
     }
-  }, [initialOrders]);
+  }, [initialOrders, logUserActivity]);
 
   // Enhanced real-time subscription for order updates
   useEffect(() => {
@@ -80,6 +83,8 @@ const OrdersList: React.FC<OrdersListProps> = ({ onOrderSelect }) => {
             const updatedOrders = prev.map(order => {
               if (order.id === updatedOrder.id) {
                 console.log(`Updating order ${order.id} status from ${order.status} to ${updatedOrder.status}`);
+                // Log status change activity
+                logUserActivity('order_status_changed', `Order ${order.id} status changed to ${updatedOrder.status}`);
                 return { ...order, ...updatedOrder };
               }
               return order;
@@ -101,6 +106,9 @@ const OrdersList: React.FC<OrdersListProps> = ({ onOrderSelect }) => {
         (payload) => {
           console.log('New order received:', payload);
           const newOrder = payload.new as any;
+          
+          // Log new order activity
+          logUserActivity('order_created', `New order ${newOrder.id} created`);
           
           // Fetch the complete order data with order_items
           const fetchCompleteOrder = async () => {
@@ -135,7 +143,7 @@ const OrdersList: React.FC<OrdersListProps> = ({ onOrderSelect }) => {
       console.log('Cleaning up real-time subscription');
       supabase.removeChannel(channel);
     };
-  }, [user]);
+  }, [user, logUserActivity]);
 
   // Force refresh orders when user focuses on the page
   useEffect(() => {

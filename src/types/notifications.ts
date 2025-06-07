@@ -2,7 +2,7 @@
 export interface Notification {
   id: string;
   user_id: string;
-  type: 'order_placed' | 'order_accepted' | 'order_rejected' | 'order_shipped';
+  type: 'new_order' | 'order_accepted' | 'order_rejected' | 'order_shipped' | 'order_delivered' | 'promo' | 'system';
   title: string;
   message: string;
   order_id?: string;

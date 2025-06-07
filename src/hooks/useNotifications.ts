@@ -16,7 +16,7 @@ export const useNotifications = () => {
     const fetchNotifications = async () => {
       try {
         const { data, error } = await supabase
-          .from('notifications' as any)
+          .from('notifications')
           .select('*')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false });
@@ -26,7 +26,6 @@ export const useNotifications = () => {
           return;
         }
 
-        // Properly convert the data to Notification[] type
         const typedData: Notification[] = (data as unknown as Notification[]) || [];
         setNotifications(typedData);
         setUnreadCount(typedData.filter(n => !n.read).length);
@@ -67,7 +66,7 @@ export const useNotifications = () => {
 
     try {
       const { error } = await supabase
-        .from('notifications' as any)
+        .from('notifications')
         .update({ read: true })
         .eq('id', notificationId)
         .eq('user_id', user.id);
