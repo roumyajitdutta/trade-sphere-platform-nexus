@@ -7,6 +7,7 @@ import { useCart } from '@/contexts/CartContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 import SearchBar from '@/components/search/SearchBar';
 
 const Header = () => {
@@ -22,15 +23,15 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-white shadow-sm border-b sticky top-0 z-50">
+    <header className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm border-b sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2 flex-shrink-0">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">M</span>
+            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+              <span className="text-primary-foreground font-bold text-lg">M</span>
             </div>
-            <span className="text-xl font-bold text-gray-900 hidden sm:block">Marketplace</span>
+            <span className="text-xl font-bold text-foreground hidden sm:block">Marketplace</span>
           </Link>
 
           {/* Search Bar */}
@@ -42,6 +43,8 @@ const Header = () => {
 
           {/* User Actions */}
           <div className="flex items-center space-x-2 lg:space-x-4 flex-shrink-0">
+            <ThemeToggle />
+            
             {user ? (
               <>
                 {getUserRole() === 'buyer' && (
