@@ -1,4 +1,4 @@
-# Welcome to my Ecommerce webapp development project
+# Welcome to my Ecommerce Webapp Development Project
 
 ## Project info
 
@@ -37,9 +37,9 @@ Admins (optional future role) for platform oversight and data insights
 
 Before you begin, make sure the following are installed on the system:
 
-Node.js (LTS) – Required to run and build the project.
+Node.js (LTS) – Required to run and build the project. https://nodejs.org/en/download
 
-Git – To clone the repository.
+Git – To clone the repository. https://git-scm.com/downloads/win
 
 ```sh
 node -v
@@ -92,6 +92,4 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
