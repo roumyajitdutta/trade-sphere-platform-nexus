@@ -33,32 +33,54 @@ Buyers seeking a clean, intuitive e-commerce experience
 Admins (optional future role) for platform oversight and data insights
 
 
+## Installation
 
-**Use your preferred IDE**
+Before you begin, make sure the following are installed on the system:
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+Node.js (LTS) – Required to run and build the project.
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+Git – To clone the repository.
 
 ```sh
-
+node -v
+npm -v
+git --version
 ```
 
-**Edit a file directly in GitHub**
+### 📁 Step 1: Clone the Repository
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Open a terminal and run:
+```sh
+git clone https://github.com/your-username/trade-sphere-platform-nexus
+cd trade-sphere-platform-nexus
+```
 
-**Use GitHub Codespaces**
+### 📦 Step 2: Install Dependencies
+Install all required packages listed in package.json:
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+```sh
+npm install
+```
+
+This installs:
+
+React
+
+TypeScript
+
+ShadCN UI components
+
+Tailwind CSS
+
+Other project dependencies
+
+### 🧪 Step 3: Run the Development Server
+
+```sh
+npm run dev
+```
+
+
 
 ## What technologies are used for this project?
 
